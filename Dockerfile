@@ -39,13 +39,18 @@ COPY --from=build /app/client/dist ./client/dist
 # Railway rejects it, and Docker/Render/Fly all mount at run time anyway.
 RUN mkdir -p /app/server/data && chown -R node:node /app/server/data
 
+# su-exec lets the entrypoint start as root, hand the mounted volume to the
+# node user, and then drop privileges before running the server.
+RUN apk add --no-cache su-exec
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 ENV PORT=8787
 ENV DATABASE_FILE=/app/server/data/genlayer-typerace.db
 EXPOSE 8787
 
-USER node
-
 HEALTHCHECK --interval=30s --timeout=4s --start-period=15s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8787)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "server/dist/index.js"]

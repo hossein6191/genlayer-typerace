@@ -53,13 +53,22 @@ jobs:
       - name: Build image
         run: docker build -t genlayer-typerace:ci .
 
-      - name: Boot the container and check it serves
+      - name: Boot the container on a root owned volume
         run: |
+          # Reproduce what a hosting platform actually does: mount a persistent
+          # volume that arrives owned by root, into an image whose server runs
+          # as an unprivileged user. Getting this wrong is SQLITE_CANTOPEN.
+          sudo mkdir -p /tmp/typerace-data
+          sudo chown root:root /tmp/typerace-data
+          sudo chmod 755 /tmp/typerace-data
+
           docker run -d --name typerace \
             -p 8787:8787 \
+            -v /tmp/typerace-data:/app/server/data \
             -e SESSION_SECRET=ci-session-secret-not-used-anywhere-else \
             -e ADMIN_PASSWORD=ci-admin-password \
             genlayer-typerace:ci
+
           for i in $(seq 1 45); do
             curl -sf http://localhost:8787/api/health > /dev/null && READY=1 && break
             sleep 2
@@ -69,7 +78,21 @@ jobs:
             docker logs typerace
             exit 1
           fi
+
           curl -sf http://localhost:8787/ | grep -q "GenLayer TypeRace" \
             && echo "the container serves the built client"
-          docker logs typerace
-          docker rm -f typerace
+
+      - name: Check the database was written to the volume
+        run: |
+          sudo ls -la /tmp/typerace-data
+          sudo test -f /tmp/typerace-data/genlayer-typerace.db \
+            && echo "sqlite wrote to the mounted volume"
+
+      - name: Check the server did not stay root
+        run: |
+          test "$(docker exec typerace id -un)" = "node" \
+            && echo "the server dropped privileges to node"
+
+      - name: Container logs
+        if: always()
+        run: docker logs typerace && docker rm -f typerace
