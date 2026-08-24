@@ -192,6 +192,17 @@ export class Room {
     }
     if (typeof patch.allowLateJoin === "boolean") next.allowLateJoin = patch.allowLateJoin;
     if (typeof patch.maxPlayers === "number") next.maxPlayers = clampInt(patch.maxPlayers, 2, 64);
+    if (patch.passageId !== undefined) {
+      const wanted = patch.passageId ? getPassage(patch.passageId) : null;
+      next.passageId = wanted ? wanted.id : null;
+      // Pinning a passage from another tier moves the room to that tier.
+      if (wanted) next.difficulty = wanted.difficulty;
+    }
+    // Changing tier drops a pin that no longer belongs to it.
+    if (next.passageId) {
+      const pinned = getPassage(next.passageId);
+      if (!pinned || pinned.difficulty !== next.difficulty) next.passageId = null;
+    }
 
     if (next.mode === "sprint") next.timeLimitSec = SPRINT_DEFAULT_SEC;
 
@@ -209,7 +220,13 @@ export class Room {
     if (this.phase === "countdown" || this.phase === "racing") return "already_running";
     if (this.activePlayers().length === 0) return "no_players";
 
-    this.passage = randomPassage(this.settings.difficulty, this.passage?.id);
+    // A pinned passage wins, as long as it still matches the difficulty the
+    // room is set to; otherwise draw one and avoid repeating the last.
+    const pinned = this.settings.passageId ? getPassage(this.settings.passageId) : undefined;
+    this.passage =
+      pinned && pinned.difficulty === this.settings.difficulty
+        ? pinned
+        : randomPassage(this.settings.difficulty, this.passage?.id);
     this.raceId = nanoid(16);
     this.round += 1;
     this.phase = "countdown";

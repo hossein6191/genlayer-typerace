@@ -492,14 +492,13 @@ const WOOD_DENT_URI = svgDataUri(`
   <ellipse cx='34' cy='330' rx='2.7' ry='1.2' fill='url(#d1)'/>
 </svg>`);
 
-const AUDIO_SAMPLE = "data:@file/ogg;base64,T2dnUwACAAAAAAAAAAD8mDZiAAAAAPn8AdgBHgF2b3JiaXMAAAAAAoC7AAAAAAAAgLUBAAAAAAC4AU9nZ1MAAAAAAAAAAAAA/Jg2YgEAAAAkrRTxET////////////////////8HA3ZvcmJpcwwAAABMYXZmNjEuNy4xMDABAAAAHwAAAGVuY29kZXI9TGF2YzYxLjE5LjEwMSBsaWJ2b3JiaXMBBXZvcmJpcyVCQ1YBAEAAACRzGCpGpXMWhBAaQlAZ4xxCzmvsGUJMEYIcMkxbyyVzkCGkoEKIWyiB0JBVAABAAACHQXgUhIpBCCGEJT1YkoMnPQghhIg5eBSEaUEIIYQQQgghhBBCCCGERTlokoMnQQgdhOMwOAyD5Tj4HIRFOVgQgydB6CCED0K4moOsOQghhCQ1SFCDBjnoHITCLCiKgsQwuBaEBDUojILkMMjUgwtCiJqDSTX4GoRnQXgWhGlBCCGEJEFIkIMGQcgYhEZBWJKDBjm4FITLQagahCo5CB+EIDRkFQCQAACgoiiKoigKEBqyCgDIAAAQQFEUx3EcyZEcybEcCwgNWQUAAAEACAAAoEiKpEiO5EiSJFmSJVmSJVmS5omqLMuyLMuyLMsyEBqyCgBIAABQUQxFcRQHCA1ZBQBkAAAIoDiKpViKpWiK54iOCISGrAIAgAAABAAAEDRDUzxHlETPVFXXtm3btm3btm3btm3btm1blmUZCA1ZBQBAAAAQ0mlmqQaIMAMZBkJDVgEACAAAgBGKMMSA0JBVAABAAACAGEoOogmtOd+c46BZDppKsTkdnEi1eZKbirk555xzzsnmnDHOOeecopxZDJoJrTnnnMSgWQqaCa0555wnsXnQmiqtOeeccc7pYJwRxjnnnCateZCajbU555wFrWmOmkuxOeecSLl5UptLtTnnnHPOOeecc84555zqxekcnBPOOeecqL25lpvQxTnnnE/G6d6cEM4555xzzjnnnHPOOeecIDRkFQAABABAEIaNYdwpCNLnaCBGEWIaMulB9+gwCRqDnELq0ehopJQ6CCWVcVJKJwgNWQUAAAIAQAghhRRSSCGFFFJIIYUUYoghhhhyyimnoIJKKqmooowyyyyzzDLLLLPMOuyssw47DDHEEEMrrcRSU2011lhr7jnnmoO0VlprrbVSSimllFIKQkNWAQAgAAAEQgYZZJBRSCGFFGKIKaeccgoqqIDQkFUAACAAgAAAAABP8hzRER3RER3RER3RER3R8RzPESVREiVREi3TMjXTU0VVdWXXlnVZt31b2IVd933d933d+HVhWJZlWZZlWZZlWZZlWZZlWZYgNGQVAAACAAAghBBCSCGFFFJIKcYYc8w56CSUEAgNWQUAAAIACAAAAHAUR3EcyZEcSbIkS9IkzdIsT/M0TxM9URRF0zRV0RVdUTdtUTZl0zVdUzZdVVZtV5ZtW7Z125dl2/d93/d93/d93/d93/d9XQdCQ1YBABIAADqSIymSIimS4ziOJElAaMgqAEAGAEAAAIriKI7jOJIkSZIlaZJneZaomZrpmZ4qqkBoyCoAABAAQAAAAAAAAIqmeIqpeIqoeI7oiJJomZaoqZoryqbsuq7ruq7ruq7ruq7ruq7ruq7ruq7ruq7ruq7ruq7ruq7ruq4LhIasAgAkAAB0JEdyJEdSJEVSJEdygNCQVQCADACAAAAcwzEkRXIsy9I0T/M0TxM90RM901NFV3SB0JBVAAAgAIAAAAAAAAAMybAUy9EcTRIl1VItVVMt1VJF1VNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVN0zRNEwgNWQkAkAEAkBBTLS3GmgmLJGLSaqugYwxS7KWxSCpntbfKMYUYtV4ah5RREHupJGOKQcwtpNApJq3WVEKFFKSYYyoVUg5SIDRkhQAQmgHgcBxAsixAsiwAAAAAAAAAkDQN0DwPsDQPAAAAAAAAACRNAyxPAzTPAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABA0jRA8zxA8zwAAAAAAAAA0DwP8DwR8EQRAAAAAAAAACzPAzTRAzxRBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABA0jRA8zxA8zwAAAAAAAAAsDwP8EQR0DwRAAAAAAAAACzPAzxRBDzRAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAEOAAABBgIRQasiIAiBMAcEgSJAmSBM0DSJYFTYOmwTQBkmVB06BpME0AAAAAAAAAAAAAJE2DpkHTIIoASdOgadA0iCIAAAAAAAAAAAAAkqZB06BpEEWApGnQNGgaRBEAAAAAAAAAAAAAzzQhihBFmCbAM02IIkQRpgkAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAGHAAAAgwoQwUGrIiAIgTAHA4imUBAIDjOJYFAACO41gWAABYliWKAABgWZooAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAYcAAACDChDBQashIAiAIAcCiKZQHHsSzgOJYFJMmyAJYF0DyApgFEEQAIAAAocAAACLBBU2JxgEJDVgIAUQAABsWxLE0TRZKkaZoniiRJ0zxPFGma53meacLzPM80IYqiaJoQRVE0TZimaaoqME1VFQAAUOAAABBgg6bE4gCFhqwEAEICAByKYlma5nmeJ4qmqZokSdM8TxRF0TRNU1VJkqZ5niiKommapqqyLE3zPFEURdNUVVWFpnmeKIqiaaqq6sLzPE8URdE0VdV14XmeJ4qiaJqq6roQRVE0TdNUTVV1XSCKpmmaqqqqrgtETxRNU1Vd13WB54miaaqqq7ouEE3TVFVVdV1ZBpimaaqq68oyQFVV1XVdV5YBqqqqruu6sgxQVdd1XVmWZQCu67qyLMsCAAAOHAAAAoygk4wqi7DRhAsPQKEhKwKAKAAAwBimFFPKMCYhpBAaxiSEFEImJaXSUqogpFJSKRWEVEoqJaOUUmopVRBSKamUCkIqJZVSAADYgQMA2IGFUGjISgAgDwCAMEYpxhhzTiKkFGPOOScRUoox55yTSjHmnHPOSSkZc8w556SUzjnnnHNSSuacc845KaVzzjnnnJRSSuecc05KKSWEzkEnpZTSOeecEwAAVOAAABBgo8jmBCNBhYasBABSAQAMjmNZmuZ5omialiRpmud5niiapiZJmuZ5nieKqsnzPE8URdE0VZXneZ4oiqJpqirXFUXTNE1VVV2yLIqmaZqq6rowTdNUVdd1XZimaaqq67oubFtVVdV1ZRm2raqq6rqyDFzXdWXZloEsu67s2rIAAPAEBwCgAhtWRzgpGgssNGQlAJABAEAYg5BCCCFlEEIKIYSUUggJAAAYcAAACDChDBQashIASAUAAIyx1lprrbXWQGettdZaa62AzFprrbXWWmuttdZaa6211lJrrbXWWmuttdZaa6211lprrbXWWmuttdZaa6211lprrbXWWmsttdZaa6211lprrbXWWmuttdZaa6211lprrbXWWksppZRSSimllFJKKaWUUkoppZRSSgUA+lU4APg/2LA6wknRWGChISsBgHAAAMAYpRhzDEIppVQIMeacdFRai7FCiDHnJKTUWmzFc85BKCGV1mIsnnMOQikpxVZjUSmEUlJKLbZYi0qho5JSSq3VWIwxqaTWWoutxmKMSSm01FqLMRYjbE2ptdhqq7EYY2sqLbQYY4zFCF9kbC2m2moNxggjWywt1VprMMYY3VuLpbaaizE++NpSLDHWXAAAd4MDAESCjTOsJJ0VjgYXGrISAAgJACAQUooxxhhzzjnnpFKMOeaccw5CCKFUijHGnHMOQgghlIw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";
-
 interface ThockEngine {
   ctx: AudioContext;
   dry: GainNode;
   wet: GainNode;
   supportsPanning: boolean;
-  buffer: AudioBuffer | null;
+  /** Pre-rolled white noise, reused for the impact of every keypress. */
+  noise: AudioBuffer;
 }
 
 let thockEngine: ThockEngine | null = null;
@@ -523,30 +522,15 @@ function buildCaseImpulse(ctx: AudioContext): AudioBuffer {
   return buffer;
 }
 
-function base64ToArrayBuffer(dataUri: string): ArrayBuffer | null {
-  try {
-    const commaIndex = dataUri.indexOf(",");
-    const base64 = commaIndex >= 0 ? dataUri.slice(commaIndex + 1) : dataUri;
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes.buffer;
-  } catch {
-    return null;
-  }
-}
-
-async function decodeSample(
-  ctx: AudioContext,
-  dataUri: string,
-): Promise<AudioBuffer | null> {
-  const arrayBuffer = base64ToArrayBuffer(dataUri);
-  if (!arrayBuffer || arrayBuffer.byteLength === 0) return null;
-  try {
-    return await ctx.decodeAudioData(arrayBuffer);
-  } catch {
-    return null;
-  }
+/**
+ * A second of white noise, generated once and reused. The impact half of a
+ * keypress is a very short slice of this through a bandpass filter.
+ */
+function buildNoiseBuffer(ctx: AudioContext): AudioBuffer {
+  const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  return buffer;
 }
 
 function getThockEngine(): Promise<ThockEngine | null> {
@@ -587,14 +571,12 @@ function getThockEngine(): Promise<ThockEngine | null> {
     wet.connect(convolver);
     convolver.connect(compressor);
 
-    const buffer = await decodeSample(ctx, AUDIO_SAMPLE);
-
     const engine: ThockEngine = {
       ctx,
       dry,
       wet,
       supportsPanning: typeof ctx.createStereoPanner === "function",
-      buffer,
+      noise: buildNoiseBuffer(ctx),
     };
     thockEngine = engine;
     return engine;
@@ -603,13 +585,30 @@ function getThockEngine(): Promise<ThockEngine | null> {
   return thockEnginePromise;
 }
 
+/**
+ * A keypress is two layers played together:
+ *
+ *   impact  a few milliseconds of bandpassed noise, the plastic-on-plastic click
+ *   body    a fast decaying low tone, the hollow thock of the case
+ *
+ * These are synthesised rather than sampled. Nothing to decode, nothing to
+ * fetch, it works in every browser, and each press is detuned slightly so a
+ * fast typist does not hear the same click on repeat.
+ */
 const CATEGORY_PROFILE: Record<
   SoundCategory,
-  { rate: [number, number]; gain: number; filterHz: number | null }
+  {
+    clickHz: number;
+    clickQ: number;
+    clickMs: number;
+    bodyHz: number;
+    bodyMs: number;
+    gain: number;
+  }
 > = {
-  normal: { rate: [0.97, 1.04], gain: 0.85, filterHz: null },
-  spacebar: { rate: [0.72, 0.78], gain: 1.0, filterHz: 1600 },
-  modifier: { rate: [0.86, 0.92], gain: 0.68, filterHz: 3000 },
+  normal: { clickHz: 2600, clickQ: 1.1, clickMs: 26, bodyHz: 148, bodyMs: 70, gain: 0.5 },
+  spacebar: { clickHz: 1500, clickQ: 0.9, clickMs: 34, bodyHz: 92, bodyMs: 110, gain: 0.62 },
+  modifier: { clickHz: 3300, clickQ: 1.4, clickMs: 20, bodyHz: 190, bodyMs: 55, gain: 0.38 },
 };
 
 let soundEnabled = true;
@@ -622,8 +621,8 @@ export function setKeyboardSoundEnabled(enabled: boolean) {
 /**
  * Browsers only let an AudioContext start inside a user gesture, and only if
  * the call happens in that same task. Creating the context from a promise
- * callback leaves it suspended forever, which is silence with no error.
- * Call this synchronously from the event handler.
+ * callback leaves it suspended forever, which is silence with no error. Call
+ * this synchronously from the event handler.
  */
 export function unlockKeyboardAudio() {
   if (typeof window === "undefined" || !soundEnabled) return;
@@ -638,55 +637,80 @@ export function unlockKeyboardAudio() {
 
 function playKeySound(category: SoundCategory, muted: boolean, panHint = 0) {
   if (typeof window === "undefined" || !soundEnabled) return;
-  getThockEngine().then((engine) => {
-    if (!engine || !engine.buffer) return;
-    const { ctx, dry, wet, supportsPanning, buffer } = engine;
+
+  void getThockEngine().then((engine) => {
+    if (!engine) return;
+    const { ctx, dry, wet, supportsPanning, noise } = engine;
     if (ctx.state === "suspended") void ctx.resume();
 
     const profile = CATEGORY_PROFILE[category];
     const now = ctx.currentTime;
+    const detune = 0.94 + Math.random() * 0.12;
+    const level = profile.gain * (muted ? 0.7 : 1) * (0.9 + Math.random() * 0.2);
 
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    const [minRate, maxRate] = profile.rate;
-    src.playbackRate.value = minRate + Math.random() * (maxRate - minRate);
+    const out = ctx.createGain();
+    out.gain.value = 1;
 
-    const gain = ctx.createGain();
-    const baseGain = muted ? profile.gain * 0.75 : profile.gain;
-    gain.gain.value = baseGain * (0.96 + Math.random() * 0.08);
-
-    const nodes: AudioNode[] = [src, gain];
-    src.connect(gain);
-    let tail: AudioNode = gain;
-
-    if (profile.filterHz) {
-      const filter = ctx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.value = profile.filterHz;
-      filter.Q.value = 0.7;
-      tail.connect(filter);
-      tail = filter;
-      nodes.push(filter);
-    }
-
+    let tail: AudioNode = out;
     if (supportsPanning) {
       const panner = ctx.createStereoPanner();
-      panner.pan.value = Math.max(
-        -1,
-        Math.min(1, panHint + (Math.random() - 0.5) * 0.08),
-      );
-      tail.connect(panner);
+      panner.pan.value = Math.max(-1, Math.min(1, panHint + (Math.random() - 0.5) * 0.08));
+      out.connect(panner);
       tail = panner;
-      nodes.push(panner);
     }
-
     tail.connect(dry);
     tail.connect(wet);
 
-    src.onended = () => {
-      for (const node of nodes) node.disconnect();
+    /* impact: a short slice of noise through a bandpass */
+    const clickSeconds = (profile.clickMs / 1000) * detune;
+    const click = ctx.createBufferSource();
+    click.buffer = noise;
+    // Start somewhere random in the noise so repeats do not phase together.
+    const offset = Math.random() * Math.max(0, noise.duration - clickSeconds - 0.02);
+
+    const band = ctx.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.value = profile.clickHz * detune;
+    band.Q.value = profile.clickQ;
+
+    const clickGain = ctx.createGain();
+    clickGain.gain.setValueAtTime(0.0001, now);
+    clickGain.gain.exponentialRampToValueAtTime(level, now + 0.001);
+    clickGain.gain.exponentialRampToValueAtTime(0.0001, now + clickSeconds);
+
+    click.connect(band);
+    band.connect(clickGain);
+    clickGain.connect(out);
+
+    /* body: a low tone that dies away fast */
+    const bodySeconds = (profile.bodyMs / 1000) * detune;
+    const body = ctx.createOscillator();
+    body.type = "triangle";
+    body.frequency.setValueAtTime(profile.bodyHz * detune, now);
+    // The downward bend is what makes it read as a thock rather than a beep.
+    body.frequency.exponentialRampToValueAtTime(
+      profile.bodyHz * detune * 0.72,
+      now + bodySeconds,
+    );
+
+    const bodyGain = ctx.createGain();
+    bodyGain.gain.setValueAtTime(0.0001, now);
+    bodyGain.gain.exponentialRampToValueAtTime(level * 0.75, now + 0.004);
+    bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + bodySeconds);
+
+    body.connect(bodyGain);
+    bodyGain.connect(out);
+
+    const stopAt = now + Math.max(clickSeconds, bodySeconds) + 0.02;
+    click.start(now, offset, clickSeconds + 0.01);
+    body.start(now);
+    click.stop(stopAt);
+    body.stop(stopAt);
+
+    body.onended = () => {
+      out.disconnect();
+      if (tail !== out) tail.disconnect();
     };
-    src.start(now);
   });
 }
 

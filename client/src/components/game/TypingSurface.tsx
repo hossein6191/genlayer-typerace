@@ -76,7 +76,6 @@ export function TypingSurface({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const caretAnchorRef = useRef<HTMLSpanElement | null>(null);
   const [caret, setCaret] = useState<CaretBox | null>(null);
-  const [scrollTop, setScrollTop] = useState(0);
   const [lineHeight, setLineHeight] = useState(0);
 
   const chunks = useCallback(() => chunk(text), [text])();
@@ -97,22 +96,23 @@ export function TypingSurface({
 
     const viewport = viewportRef.current;
     if (!viewport) return;
+
+    // Follow the caret, but only when it has left the comfortable band. Inside
+    // that band the reader keeps whatever position they scrolled to.
     const viewportHeight = viewport.clientHeight;
+    const lead = box.height;
+    const current = viewport.scrollTop;
     const caretBottom = box.top + box.height;
 
-    setScrollTop((prev) => {
-      // Keep one line of lead-in above the caret so the eye has context.
-      const lead = box.height;
-      if (box.top - prev < lead) return Math.max(0, box.top - lead);
-      if (caretBottom - prev > viewportHeight - lead) {
-        return caretBottom - viewportHeight + lead;
-      }
-      return prev;
-    });
+    if (box.top - current < lead) {
+      viewport.scrollTop = Math.max(0, box.top - lead);
+    } else if (caretBottom - current > viewportHeight - lead) {
+      viewport.scrollTop = caretBottom - viewportHeight + lead;
+    }
   }, [cursor, text]);
 
   useEffect(() => {
-    setScrollTop(0);
+    if (viewportRef.current) viewportRef.current.scrollTop = 0;
   }, [text]);
 
   const minHeight = lineHeight ? lineHeight * visibleLines : undefined;
@@ -129,17 +129,17 @@ export function TypingSurface({
     >
       <div
         ref={viewportRef}
-        className="relative overflow-hidden"
+        className="gl-passage-scroll relative overflow-y-auto overscroll-contain"
         style={{ height: minHeight, minHeight: minHeight ?? "9rem" }}
+        // Reading ahead is allowed; the wheel must not be swallowed.
+        onWheel={(e) => e.stopPropagation()}
       >
         <div
           ref={contentRef}
           className={cn(
             "relative font-mono text-[clamp(0.95rem,2.1vw,1.35rem)] leading-[1.85] tracking-[0.01em]",
-            "transition-transform duration-200 ease-out",
             locked && "blur-[3px] opacity-35 select-none",
           )}
-          style={{ transform: `translateY(${-scrollTop}px)` }}
           aria-hidden={locked}
         >
           {/* The caret rides above the glyphs so it can move smoothly. */}
@@ -204,7 +204,9 @@ export function TypingSurface({
                         state === "correct" && "text-foreground",
                         state === "wrong" &&
                           "text-bad bg-bad/15 rounded-[3px] underline decoration-bad/70 decoration-2 underline-offset-[3px]",
-                        state === "current" && "text-foreground",
+                        // Not typed yet, so it reads as untyped. Lighting it
+                        // made the passage look like it was typing itself.
+                        state === "current" && "text-muted-foreground/70",
                       )}
                     >
                       {glyph}

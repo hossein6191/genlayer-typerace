@@ -85,6 +85,11 @@ export const api = {
 
   passage: (id: string) => request<{ passage: Passage }>(`/passages/${id}`).then((r) => r.passage),
 
+  passages: (difficulty: Difficulty) =>
+    request<{ passages: Array<{ id: string; title: string; chars: number }> }>(
+      `/passages?difficulty=${difficulty}`,
+    ).then((r) => r.passages),
+
   /* ---- auth ---- */
 
   me: () =>
@@ -186,7 +191,25 @@ export const api = {
         user_id: string;
       }>;
       activeRooms: AdminRoomRow[];
+      errors: {
+        counts: { total: number; last24h: number; unseen: number };
+        recent: Array<{
+          id: string;
+          at: number;
+          source: string;
+          message: string;
+          detail: string | null;
+          url: string | null;
+          user_id: string | null;
+          user_agent: string | null;
+          seen: number;
+        }>;
+      };
     }>("/admin/stats"),
+
+  markErrorsSeen: () => request<{ ok: true }>("/admin/errors/seen", { method: "POST" }),
+
+  clearErrors: () => request<{ ok: true }>("/admin/errors", { method: "DELETE" }),
 
   deleteResult: (id: string) => request<{ ok: true }>(`/admin/results/${id}`, { method: "DELETE" }),
 

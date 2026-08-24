@@ -12,6 +12,7 @@ import {
 import { globalCounters, leaderboard, saveResult, userProfile } from "../lib/db.js";
 import { checkIntegrity, computeScore } from "../lib/scoring.js";
 import { requireUser } from "../lib/auth.js";
+import { recordError } from "../lib/errors.js";
 
 export const apiRouter = Router();
 
@@ -112,6 +113,39 @@ apiRouter.get("/profile/:userId", (req, res) => {
 /* ---------------------------------------------------------------- */
 
 const soloLimiter = rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-7" });
+
+/* ---------------------------------------------------------------- */
+/* Client error reports                                              */
+/* ---------------------------------------------------------------- */
+
+const errorLimiter = rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: "draft-7" });
+
+const errorSchema = z.object({
+  message: z.string().min(1).max(500),
+  detail: z.string().max(4_000).optional(),
+  url: z.string().max(500).optional(),
+});
+
+/**
+ * The browser tells the server when something broke, so a fault a player hits
+ * shows up in the admin panel instead of only in a console nobody reads.
+ */
+apiRouter.post("/errors", errorLimiter, (req, res) => {
+  const parsed = errorSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_report" });
+    return;
+  }
+  recordError({
+    source: "client",
+    message: parsed.data.message,
+    detail: parsed.data.detail,
+    url: parsed.data.url,
+    userId: req.user?.id ?? null,
+    userAgent: req.get("user-agent") ?? null,
+  });
+  res.status(202).json({ ok: true });
+});
 
 const soloSchema = z.object({
   passageId: z.string().min(1).max(64),

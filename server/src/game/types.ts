@@ -23,6 +23,11 @@ export interface RoomSettings {
   /** When false, late arrivals are seated as spectators once racing starts. */
   allowLateJoin: boolean;
   maxPlayers: number;
+  /**
+   * Pin a specific passage. Null draws a fresh one each round, which is what
+   * you want for a group that races several times in a row.
+   */
+  passageId: string | null;
 }
 
 export const DEFAULT_SETTINGS: RoomSettings = {
@@ -32,6 +37,7 @@ export const DEFAULT_SETTINGS: RoomSettings = {
   timeLimitSec: 180,
   allowLateJoin: true,
   maxPlayers: 24,
+  passageId: null,
 };
 
 export const SPRINT_DEFAULT_SEC = 60;

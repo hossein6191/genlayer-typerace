@@ -360,7 +360,7 @@ export default function Play() {
                 lockedHint="Click here to keep typing"
                 focused={inputFocused}
                 onFocusRequest={engine.focus}
-                visibleLines={5}
+                visibleLines={6}
               />
               {/* The real input. Visually hidden but focusable, so browsers and
                   assistive tech treat this like the text field it is. */}

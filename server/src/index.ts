@@ -12,6 +12,7 @@ import { apiRouter } from "./routes/api.js";
 import { adminRouter } from "./routes/admin.js";
 import { attachSocketServer } from "./game/socket.js";
 import { db } from "./lib/db.js";
+import { recordError } from "./lib/errors.js";
 
 const app = express();
 
@@ -87,6 +88,14 @@ app.use(
     _next: express.NextFunction,
   ) => {
     console.error("[server] unhandled error:", err);
+    recordError({
+      source: "server",
+      message: err.message,
+      detail: err.stack ?? null,
+      url: _req.originalUrl,
+      userId: _req.user?.id ?? null,
+      userAgent: _req.get("user-agent") ?? null,
+    });
     res.status(500).json({ error: "internal_error" });
   },
 );
@@ -120,6 +129,18 @@ function shutdown(signal: string) {
   });
   setTimeout(() => process.exit(1), 8_000).unref();
 }
+
+// A crash that reaches here would otherwise vanish with the process.
+process.on("uncaughtException", (err) => {
+  console.error("[server] uncaught exception:", err);
+  recordError({ source: "server", message: err.message, detail: err.stack ?? null });
+});
+
+process.on("unhandledRejection", (reason) => {
+  const err = reason instanceof Error ? reason : new Error(String(reason));
+  console.error("[server] unhandled rejection:", err);
+  recordError({ source: "server", message: err.message, detail: err.stack ?? null });
+});
 
 process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));

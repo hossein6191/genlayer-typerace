@@ -7,6 +7,7 @@ import {
   LockKeyhole,
   Plus,
   RefreshCw,
+  Bug,
   ShieldAlert,
   ShieldCheck,
   Trash2,
@@ -25,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PassagePicker } from "@/components/game/PassagePicker";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { cn, formatNumber } from "@/lib/utils";
@@ -54,6 +56,20 @@ interface Stats {
     user_id: string;
   }>;
   activeRooms: AdminRoomRow[];
+  errors: {
+    counts: { total: number; last24h: number; unseen: number };
+    recent: Array<{
+      id: string;
+      at: number;
+      source: string;
+      message: string;
+      detail: string | null;
+      url: string | null;
+      user_id: string | null;
+      user_agent: string | null;
+      seen: number;
+    }>;
+  };
 }
 
 function Gate() {
@@ -131,6 +147,7 @@ export default function Admin() {
   const [countdownSec, setCountdownSec] = useState(5);
   const [timeLimitSec, setTimeLimitSec] = useState(180);
   const [allowLateJoin, setAllowLateJoin] = useState(true);
+  const [passageId, setPassageId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!isAdmin) return;
@@ -165,6 +182,7 @@ export default function Admin() {
         countdownSec,
         timeLimitSec,
         allowLateJoin,
+        passageId,
       });
       // The server builds the link from PUBLIC_URL, which may not match the
       // origin the admin is actually browsing from. Prefer what they can see.
@@ -248,7 +266,14 @@ export default function Admin() {
                 </div>
                 <div>
                   <Label className="mb-1.5 block">Difficulty</Label>
-                  <Tabs value={difficulty} onValueChange={(v) => setDifficulty(v as Difficulty)}>
+                  <Tabs
+                    value={difficulty}
+                    onValueChange={(v) => {
+                      setDifficulty(v as Difficulty);
+                      // A pin from the old tier would not survive the change.
+                      setPassageId(null);
+                    }}
+                  >
                     <TabsList className="w-full">
                       {(["easy", "medium", "hard"] as const).map((d) => (
                         <TabsTrigger key={d} value={d} className="flex-1 capitalize">
@@ -287,6 +312,8 @@ export default function Admin() {
                   />
                 </div>
               </div>
+
+              <PassagePicker difficulty={difficulty} value={passageId} onChange={setPassageId} />
 
               <div className="flex flex-wrap gap-x-6 gap-y-2">
                 <label className="flex cursor-pointer items-center gap-2 text-xs">
@@ -386,6 +413,89 @@ export default function Admin() {
                     </li>
                   ))}
                 </ul>
+              )}
+            </CardContent>
+          </Card>
+          {/* Errors */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bug className="size-4 text-bad" /> Error log
+                {stats?.errors.counts.unseen ? (
+                  <Badge variant="bad" className="ml-1">
+                    {stats.errors.counts.unseen} new
+                  </Badge>
+                ) : null}
+              </CardTitle>
+              <CardDescription>
+                Faults the game hit, from the browser and from the server, newest first
+                {stats?.errors.counts.total
+                  ? `. ${stats.errors.counts.last24h} in the last 24 hours`
+                  : ""}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!stats?.errors.recent.length ? (
+                <p className="py-4 text-sm text-muted-foreground">
+                  Nothing has gone wrong yet
+                </p>
+              ) : (
+                <>
+                  <ul className="divide-y divide-border">
+                    {stats.errors.recent.map((row) => (
+                      <li key={row.id} className="py-2.5">
+                        <div className="flex items-start gap-2">
+                          <Badge
+                            variant={row.source === "client" ? "warn" : "bad"}
+                            className="mt-0.5 shrink-0"
+                          >
+                            {row.source}
+                          </Badge>
+                          <div className="min-w-0 flex-1">
+                            <p className="break-words font-mono text-xs">{row.message}</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                              {new Date(row.at).toLocaleString()}
+                              {row.url && ` · ${row.url}`}
+                            </p>
+                            {row.detail && (
+                              <details className="mt-1">
+                                <summary className="cursor-pointer text-[11px] text-gl-purple">
+                                  stack
+                                </summary>
+                                <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded bg-surface/80 p-2 text-[10px] leading-relaxed text-muted-foreground">
+                                  {row.detail}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        await api.markErrorsSeen();
+                        void load();
+                      }}
+                    >
+                      Mark all read
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        await api.clearErrors();
+                        void load();
+                      }}
+                    >
+                      <Trash2 className="size-4 text-bad" /> Clear log
+                    </Button>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

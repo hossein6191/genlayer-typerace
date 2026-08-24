@@ -29,6 +29,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VintageKeyboard } from "@/components/ui/vintage-keyboard";
 import { Countdown } from "@/components/game/Countdown";
 import { Hud } from "@/components/game/Hud";
+import { LobbyWaiting } from "@/components/game/LobbyWaiting";
+import { PassagePicker } from "@/components/game/PassagePicker";
 import { RaceTrack, laneHue } from "@/components/game/RaceTrack";
 import { ResultsPanel } from "@/components/game/ResultsPanel";
 import { TypingHint } from "@/components/game/TypingHint";
@@ -266,6 +268,15 @@ export default function Race() {
             className="mb-4"
           />
 
+          {phase === "lobby" && (
+            <LobbyWaiting
+              racers={state.racers}
+              settings={state.settings}
+              isHost={isHost}
+              className="mb-4"
+            />
+          )}
+
           <section className="gl-panel relative overflow-hidden rounded-lg">
             {phase === "countdown" && startsAtLocal && (
               <Countdown startsAtLocal={startsAtLocal} />
@@ -305,7 +316,7 @@ export default function Race() {
                               : undefined
                     }
                     onFocusRequest={engine.focus}
-                    visibleLines={5}
+                    visibleLines={6}
                   />
                   <textarea
                     {...engine.inputProps}
@@ -316,7 +327,7 @@ export default function Race() {
                   />
                 </>
               ) : (
-                <div className="flex h-36 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+                <div className="flex flex-col items-center justify-center gap-2 py-4 text-center text-sm text-muted-foreground">
                   <p className="font-medium text-foreground">The passage is sealed</p>
                   <p className="max-w-sm text-xs leading-relaxed">
                     It is revealed the moment the host starts the countdown, so nobody can read
@@ -446,7 +457,10 @@ export default function Race() {
                     <Tabs
                       value={state.settings.difficulty}
                       onValueChange={(v) =>
-                        actions.updateSettings({ difficulty: v as Difficulty })
+                        actions.updateSettings({
+                          difficulty: v as Difficulty,
+                          passageId: null,
+                        })
                       }
                     >
                       <TabsList className="w-full">
@@ -458,6 +472,12 @@ export default function Race() {
                       </TabsList>
                     </Tabs>
                   </div>
+
+                  <PassagePicker
+                    difficulty={state.settings.difficulty}
+                    value={state.settings.passageId}
+                    onChange={(id) => actions.updateSettings({ passageId: id })}
+                  />
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>

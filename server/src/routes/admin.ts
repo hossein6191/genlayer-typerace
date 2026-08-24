@@ -4,6 +4,7 @@ import { env } from "../lib/env.js";
 import { requireAdmin } from "../lib/auth.js";
 import { db, globalCounters } from "../lib/db.js";
 import { roomManager } from "../game/rooms.js";
+import { clearErrors, errorCounts, markErrorsSeen, recentErrors } from "../lib/errors.js";
 import { DEFAULT_SETTINGS, SPRINT_DEFAULT_SEC } from "../game/types.js";
 
 export const adminRouter = Router();
@@ -17,6 +18,7 @@ const createSchema = z.object({
   timeLimitSec: z.number().int().min(30).max(600).default(DEFAULT_SETTINGS.timeLimitSec),
   allowLateJoin: z.boolean().default(DEFAULT_SETTINGS.allowLateJoin),
   maxPlayers: z.number().int().min(2).max(64).default(DEFAULT_SETTINGS.maxPlayers),
+  passageId: z.string().min(1).max(64).nullable().default(null),
 });
 
 /** Create a room and hand back the shareable invite link. */
@@ -86,7 +88,23 @@ adminRouter.get("/stats", (_req, res) => {
     )
     .all();
 
-  res.json({ counters, flagged, recent, activeRooms: roomManager.list() });
+  res.json({
+    counters,
+    flagged,
+    recent,
+    activeRooms: roomManager.list(),
+    errors: { counts: errorCounts(), recent: recentErrors(50) },
+  });
+});
+
+adminRouter.post("/errors/seen", (_req, res) => {
+  markErrorsSeen();
+  res.json({ ok: true });
+});
+
+adminRouter.delete("/errors", (_req, res) => {
+  clearErrors();
+  res.json({ ok: true });
 });
 
 /** Remove one result and rebuild the affected personal best from what remains. */

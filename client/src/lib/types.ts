@@ -41,6 +41,7 @@ export interface RoomSettings {
   timeLimitSec: number;
   allowLateJoin: boolean;
   maxPlayers: number;
+  passageId: string | null;
 }
 
 export interface RacerState {
