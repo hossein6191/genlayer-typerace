@@ -1,9 +1,14 @@
 # syntax=docker/dockerfile:1
 
-# better-sqlite3 v13 ships prebuilt binaries for linux-x64, linux-arm64 and both
-# musl variants, so no compiler toolchain is needed at any stage.
 FROM node:22-alpine AS deps
 WORKDIR /app
+
+# better-sqlite3 ships a binding.gyp, and npm compiles any package carrying one
+# unless that package defines its own install script. That compile needs Python
+# and a C++ toolchain. Only the build stages get them; the runtime image below
+# starts from a clean base and just copies the finished binary across.
+RUN apk add --no-cache python3 make g++
+
 COPY package.json package-lock.json ./
 COPY client/package.json client/package.json
 COPY server/package.json server/package.json

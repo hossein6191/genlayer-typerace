@@ -2,11 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
 
 jobs:
   build:
+    name: Type-check, build and race test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,3 +41,35 @@ jobs:
           STATUS=$?
           kill $SERVER_PID
           exit $STATUS
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Builds the same image the hosting platforms build, so a broken
+      # Dockerfile fails here rather than halfway through a deploy.
+      - name: Build image
+        run: docker build -t genlayer-typerace:ci .
+
+      - name: Boot the container and check it serves
+        run: |
+          docker run -d --name typerace \
+            -p 8787:8787 \
+            -e SESSION_SECRET=ci-session-secret-not-used-anywhere-else \
+            -e ADMIN_PASSWORD=ci-admin-password \
+            genlayer-typerace:ci
+          for i in $(seq 1 45); do
+            curl -sf http://localhost:8787/api/health > /dev/null && READY=1 && break
+            sleep 2
+          done
+          if [ -z "$READY" ]; then
+            echo "container never became healthy"
+            docker logs typerace
+            exit 1
+          fi
+          curl -sf http://localhost:8787/ | grep -q "GenLayer TypeRace" \
+            && echo "the container serves the built client"
+          docker logs typerace
+          docker rm -f typerace
