@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, Flag, Users } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Flag, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,10 +58,22 @@ export default function RaceEntry() {
         </CardContent>
       </Card>
 
-      <p className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <Users className="size-3.5" />
-        Hosting one yourself? Rooms are created from the admin panel
-      </p>
+      <div className="mt-8 rounded-lg border border-border bg-surface/50 px-5 py-4 text-center">
+        <p className="flex items-center justify-center gap-2 text-sm font-semibold">
+          <Users className="size-4 text-gl-purple" />
+          Want to host a race?
+        </p>
+        <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
+          Open race control, create a room, and send the invite link to your players. Everyone
+          waits in the lobby until you start
+        </p>
+        <Link to="/admin">
+          <Button variant="outline" size="sm" className="mt-3">
+            <ShieldCheck className="size-4" />
+            Open race control
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

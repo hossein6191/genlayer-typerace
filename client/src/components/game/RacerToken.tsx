@@ -6,6 +6,8 @@ interface RacerTokenProps {
   boosting?: boolean;
   finished?: boolean;
   isMe?: boolean;
+  /** A pace car rather than a person: outline only, so it cannot be mistaken. */
+  ghost?: boolean;
   hue: string;
   className?: string;
 }
@@ -23,6 +25,7 @@ export function RacerToken({
   boosting = false,
   finished = false,
   isMe = false,
+  ghost = false,
   hue,
   className,
 }: RacerTokenProps) {
@@ -69,20 +72,23 @@ export function RacerToken({
         {/* Chassis: a forward-leaning wedge. */}
         <path
           d="M3 24 L10 13 Q13 9 19 9 L37 9 Q43 9 48 13 L60 20 Q62 21 62 24 L62 26 Q62 28 60 28 L5 28 Q3 28 3 26 Z"
-          fill={`url(#body-${hue.replace(/[^a-z0-9]/gi, "")})`}
+          fill={ghost ? "none" : `url(#body-${hue.replace(/[^a-z0-9]/gi, "")})`}
           stroke={hue}
           strokeWidth="1.1"
           strokeLinejoin="round"
+          strokeDasharray={ghost ? "3 2" : undefined}
         />
 
         {/* Canopy */}
-        <path
-          d="M17 12 L34 12 Q39 12 43 15 L44 16 L18 16 Q16 16 16 14 Z"
-          fill="rgba(255,255,255,0.28)"
-        />
+        {!ghost && (
+          <path
+            d="M17 12 L34 12 Q39 12 43 15 L44 16 L18 16 Q16 16 16 14 Z"
+            fill="rgba(255,255,255,0.28)"
+          />
+        )}
 
         {/* GenLayer Strong Mark as the emblem on the door. */}
-        <g transform="translate(22.5 17.5) scale(0.115)">
+        <g transform="translate(22.5 17.5) scale(0.115)" opacity={ghost ? 0.5 : 1}>
           <polygon points="44.26 32.35 27.72 67.12 43.29 74.9 0 91.93 44.26 0 44.26 32.35" fill="#fff" />
           <polygon points="53.5 32.35 70.04 67.12 54.47 74.9 97.76 91.93 53.5 0 53.5 32.35" fill="#fff" />
           <polygon

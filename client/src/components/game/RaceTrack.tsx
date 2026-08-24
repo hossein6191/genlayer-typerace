@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Crown, Flag, Wifi, WifiOff, Zap } from "lucide-react";
+import { Crown, Flag, Ghost, Wifi, WifiOff, Zap } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RacerToken } from "./RacerToken";
 import { cn, ordinal } from "@/lib/utils";
@@ -27,6 +27,11 @@ interface RaceTrackProps {
   boosts: Record<string, number>;
   /** Peak WPM in the room, used to normalise the speed visuals. */
   maxWpm?: number;
+  /**
+   * Racers that are not people. A pace car showing your own record is useful
+   * to chase, but only once it is obviously not another player.
+   */
+  ghostIds?: string[];
   compact?: boolean;
   className?: string;
 }
@@ -37,8 +42,10 @@ export function RaceTrack({
   boosts,
   maxWpm = 120,
   compact = false,
+  ghostIds,
   className,
 }: RaceTrackProps) {
+  const ghosts = new Set(ghostIds ?? []);
   const now = Date.now();
 
   const lanes = useMemo(() => {
@@ -84,6 +91,7 @@ export function RaceTrack({
         {lanes.map((racer, index) => {
           const hue = laneHue(index);
           const isMe = racer.userId === meId;
+          const isGhost = ghosts.has(racer.userId);
           const boosting = (boosts[racer.userId] ?? racer.boostUntil ?? 0) > now;
           const speed = Math.min(1, racer.wpm / Math.max(40, maxWpm));
 
@@ -95,6 +103,7 @@ export function RaceTrack({
                 "relative flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors",
                 isMe ? "bg-gl-purple/8 ring-1 ring-gl-purple/25" : "hover:bg-surface-2/60",
                 !racer.connected && "opacity-45",
+                isGhost && "opacity-55",
               )}
             >
               {/* Identity */}
@@ -110,7 +119,12 @@ export function RaceTrack({
                     <span className="truncate" style={{ color: isMe ? hue : undefined }}>
                       {racer.displayName}
                     </span>
-                    {racer.isHost && <Crown className="size-3 shrink-0 text-warn" aria-label="Host" />}
+                    {isGhost && (
+                      <Ghost className="size-3 shrink-0 text-muted-foreground" aria-label="Pace car" />
+                    )}
+                    {racer.isHost && !isGhost && (
+                      <Crown className="size-3 shrink-0 text-warn" aria-label="Host" />
+                    )}
                     {!racer.connected && (
                       <WifiOff className="size-3 shrink-0 text-muted-foreground" aria-label="Disconnected" />
                     )}
@@ -119,7 +133,9 @@ export function RaceTrack({
                     )}
                   </p>
                   <p className="truncate text-[10px] tabular-nums text-muted-foreground">
-                    {Math.round(racer.wpm)} wpm · {racer.accuracy.toFixed(0)}%
+                    {isGhost
+                      ? `pace ${Math.round(racer.wpm)} wpm`
+                      : `${Math.round(racer.wpm)} wpm · ${racer.accuracy.toFixed(0)}%`}
                   </p>
                 </div>
               </div>
@@ -160,6 +176,7 @@ export function RaceTrack({
                     boosting={boosting}
                     finished={racer.finishedAt != null}
                     isMe={isMe}
+                    ghost={isGhost}
                     hue={hue}
                   />
                 </div>

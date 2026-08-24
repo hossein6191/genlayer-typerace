@@ -258,7 +258,9 @@ export default function Play() {
       finishedAt: engine.finished ? Date.now() : null,
     };
 
-    if (!personalBest) return [you];
+    // No record yet, or the clock has not started: nothing to chase, and a car
+    // moving on its own before you have pressed a key is just confusing.
+    if (!personalBest || engine.snapshot.elapsedMs <= 0) return [you];
 
     // The ghost travels at exactly your record pace, so staying ahead of it
     // means you are on track to beat it.
@@ -267,7 +269,7 @@ export default function Play() {
       ...base,
       userId: "ghost",
       username: "pb",
-      displayName: "Your record",
+      displayName: "Your record pace",
       progress: Math.min(1, ghostChars / total),
       wpm: personalBest,
       accuracy: 100,
@@ -323,6 +325,7 @@ export default function Play() {
         meId="you"
         boosts={{}}
         maxWpm={Math.max(80, personalBest ?? 0, engine.snapshot.wpm)}
+        ghostIds={["ghost"]}
         compact
         className="mb-4"
       />

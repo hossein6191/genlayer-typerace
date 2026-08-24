@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { StrongMark } from "./BrandMark";
 
 export function Footer() {
@@ -18,8 +19,16 @@ export function Footer() {
             </a>
           </span>
         </p>
-        <p>
-          Built by{" "}
+        <p className="flex items-center gap-4">
+          <Link
+            to="/admin"
+            className="transition-colors hover:text-foreground"
+            title="Create and run races"
+          >
+            Race control
+          </Link>
+          <span>
+            Built by{" "}
           <a
             href="https://x.com/Hellishnum1"
             target="_blank"
@@ -27,7 +36,8 @@ export function Footer() {
             className="font-semibold text-foreground transition-colors hover:text-gl-pink"
           >
             @Hellishnum1
-          </a>
+            </a>
+          </span>
         </p>
       </div>
     </footer>

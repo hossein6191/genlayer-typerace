@@ -157,13 +157,13 @@ export function TypingSurface({
                 focused ? "animate-[caret_1.05s_steps(1)_infinite]" : "opacity-30",
               )}
               style={{
-                // Sits on the trailing edge of the character rather than over
-                // its left stroke, where the glow washed the letter out and
-                // made the very character you were reading hard to see.
-                left: caret.left + caret.width,
+                // In the gap in front of the character, not on top of it. The
+                // old glow washed over the left stroke of the very letter the
+                // player was reading.
+                left: caret.left - 1.5,
                 top: caret.top + caret.height * 0.12,
                 height: caret.height * 0.76,
-                boxShadow: "0 0 6px 0 var(--color-gl-pink)",
+                boxShadow: "0 0 5px 0 var(--color-gl-pink)",
               }}
             />
           )}
@@ -180,8 +180,20 @@ export function TypingSurface({
               );
             }
 
+            // The word the caret is inside gets an underline, so the eye can
+            // find its place without hunting for a one pixel bar.
+            const isCurrentWord =
+              cursor >= piece.start && cursor < piece.start + piece.value.length;
+
             return (
-              <span key={`w-${pieceIndex}`} className="inline-block whitespace-pre">
+              <span
+                key={`w-${pieceIndex}`}
+                className={cn(
+                  "inline-block whitespace-pre",
+                  isCurrentWord &&
+                    "underline decoration-gl-purple/50 decoration-2 underline-offset-[6px]",
+                )}
+              >
                 {piece.value.split("").map((ch, i) => {
                   const index = piece.start + i;
                   const state = charStates[index] ?? "pending";
@@ -198,6 +210,10 @@ export function TypingSurface({
                         ? "␣"
                         : (entered ?? ch)
                       : ch;
+                  // Typing a letter where a space belongs used to run the two
+                  // words together on screen, so "enough for" read as
+                  // "enoughffor" and the mistake looked like a rendering bug.
+                  const swallowedSpace = state === "wrong" && ch === " " && entered !== " ";
 
                   return (
                     <span
@@ -213,6 +229,7 @@ export function TypingSurface({
                         state === "correct" && "text-foreground",
                         state === "wrong" &&
                           "text-bad bg-bad/15 rounded-[3px] underline decoration-bad/70 decoration-2 underline-offset-[3px]",
+                        swallowedSpace && "outline outline-1 outline-bad/60",
                         // Not typed yet, so it reads as untyped. Lighting it
                         // made the passage look like it was typing itself.
                         state === "current" && "text-muted-foreground/70",
