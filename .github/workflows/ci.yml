@@ -90,8 +90,12 @@ jobs:
 
       - name: Check the server did not stay root
         run: |
-          test "$(docker exec typerace id -un)" = "node" \
-            && echo "the server dropped privileges to node"
+          # Ask who owns PID 1, which is the server itself after the entrypoint
+          # exec'd into it. `docker exec` would start a fresh process under the
+          # image default user and tell us nothing about the running server.
+          OWNER=$(docker exec typerace stat -c '%U' /proc/1)
+          echo "pid 1 runs as: $OWNER"
+          test "$OWNER" = "node"
 
       - name: Container logs
         if: always()
