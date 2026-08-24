@@ -7,6 +7,10 @@
 <p align="center">A multiplayer typing race about GenLayer</p>
 
 <p align="center">
+  <a href="https://genlayer-typerace-production.up.railway.app"><b>Play it</b></a>
+</p>
+
+<p align="center">
   <img alt="React" src="https://img.shields.io/badge/React-19-0A0C1A?style=flat-square&labelColor=9B6AF6">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-0A0C1A?style=flat-square&labelColor=5B5AFF">
   <img alt="Socket.IO" src="https://img.shields.io/badge/Socket.IO-4-0A0C1A?style=flat-square&labelColor=E37DF7">
@@ -41,8 +45,6 @@ npm install
 cp .env.example server/.env
 npm run dev
 ```
-
-Open <http://localhost:5173>
 
 [`.env.example`](.env.example) lists every setting the server reads
 
