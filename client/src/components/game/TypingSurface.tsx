@@ -22,6 +22,7 @@ interface TypingSurfaceProps {
 interface CaretBox {
   left: number;
   top: number;
+  width: number;
   height: number;
 }
 
@@ -90,7 +91,12 @@ export function TypingSurface({
 
     const a = anchor.getBoundingClientRect();
     const c = content.getBoundingClientRect();
-    const box = { left: a.left - c.left, top: a.top - c.top, height: a.height };
+    const box = {
+      left: a.left - c.left,
+      top: a.top - c.top,
+      width: a.width,
+      height: a.height,
+    };
     setCaret(box);
     setLineHeight(a.height);
 
@@ -151,10 +157,13 @@ export function TypingSurface({
                 focused ? "animate-[caret_1.05s_steps(1)_infinite]" : "opacity-30",
               )}
               style={{
-                left: caret.left,
+                // Sits on the trailing edge of the character rather than over
+                // its left stroke, where the glow washed the letter out and
+                // made the very character you were reading hard to see.
+                left: caret.left + caret.width,
                 top: caret.top + caret.height * 0.12,
                 height: caret.height * 0.76,
-                boxShadow: "0 0 10px 1px var(--color-gl-pink)",
+                boxShadow: "0 0 6px 0 var(--color-gl-pink)",
               }}
             />
           )}
