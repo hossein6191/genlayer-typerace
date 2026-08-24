@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { env } from "../lib/env.js";
 import { requireAdmin } from "../lib/auth.js";
-import { db, globalCounters } from "../lib/db.js";
+import { db, globalCounters, resetData } from "../lib/db.js";
 import { roomManager } from "../game/rooms.js";
 import { clearErrors, errorCounts, markErrorsSeen, recentErrors } from "../lib/errors.js";
 import { DEFAULT_SETTINGS, SPRINT_DEFAULT_SEC } from "../game/types.js";
@@ -149,6 +149,37 @@ adminRouter.delete("/results/:id", (req, res) => {
 
   purge();
   res.json({ ok: true });
+});
+
+/* ---------------------------------------------------------------- */
+/* Reset                                                             */
+/* ---------------------------------------------------------------- */
+
+const resetSchema = z.object({
+  scope: z.enum(["scores", "everything"]),
+  // Typing the word is the confirmation. A misplaced click cannot produce it.
+  confirm: z.literal("RESET"),
+});
+
+adminRouter.post("/reset", (req, res) => {
+  const parsed = resetSchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ error: "confirmation_required" });
+    return;
+  }
+
+  // Rooms hold player ids in memory, so a wipe underneath them would leave
+  // races pointing at people who no longer exist.
+  for (const room of roomManager.list()) {
+    const live = roomManager.get(room.code);
+    live?.abort();
+    roomManager.destroy(room.code);
+  }
+
+  resetData(parsed.data.scope);
+  console.warn(`[admin] data reset (${parsed.data.scope})`);
+
+  res.json({ ok: true, scope: parsed.data.scope, counters: globalCounters() });
 });
 
 /** Clear a suspicious flag after a manual review. */

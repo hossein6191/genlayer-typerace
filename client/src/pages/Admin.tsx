@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DangerZone } from "@/components/game/DangerZone";
 import { PassagePicker } from "@/components/game/PassagePicker";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
@@ -499,6 +500,7 @@ export default function Admin() {
               )}
             </CardContent>
           </Card>
+          <DangerZone onDone={() => void load()} />
         </div>
 
         {/* Side column */}

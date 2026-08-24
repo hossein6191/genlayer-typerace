@@ -211,6 +211,12 @@ export const api = {
 
   clearErrors: () => request<{ ok: true }>("/admin/errors", { method: "DELETE" }),
 
+  resetData: (scope: "scores" | "everything") =>
+    request<{ ok: true; scope: string; counters: { players: number; races: number } }>(
+      "/admin/reset",
+      { method: "POST", body: JSON.stringify({ scope, confirm: "RESET" }) },
+    ),
+
   deleteResult: (id: string) => request<{ ok: true }>(`/admin/results/${id}`, { method: "DELETE" }),
 
   clearFlag: (id: string) =>

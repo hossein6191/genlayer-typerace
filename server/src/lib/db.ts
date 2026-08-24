@@ -530,6 +530,34 @@ export function userProfile(userId: string): UserProfile | null {
   };
 }
 
+/**
+ * Wipe the game's records.
+ *
+ * "scores" clears everything anyone has raced for but keeps the accounts, so a
+ * returning player still gets their name back. "everything" also removes the
+ * accounts, which is what you want before opening a deployment to real people
+ * after testing on it.
+ *
+ * There is no undo, which is why the route asks for a typed confirmation.
+ */
+export const resetData = db.transaction((scope: "scores" | "everything") => {
+  db.prepare("DELETE FROM results").run();
+  db.prepare("DELETE FROM personal_bests").run();
+  db.prepare("DELETE FROM races").run();
+
+  if (scope === "everything") {
+    db.prepare("DELETE FROM user_stats").run();
+    db.prepare("DELETE FROM users").run();
+  } else {
+    // Keep the rows so a player who signs back in is the same person, but
+    // reset every number attached to them.
+    db.prepare(
+      `UPDATE user_stats SET races = 0, ranked_races = 0, wins = 0, podiums = 0,
+                             sum_wpm = 0, sum_accuracy = 0, best_wpm = 0, last_race_at = NULL`,
+    ).run();
+  }
+});
+
 export function globalCounters() {
   const one = <T>(sql: string) => db.prepare(sql).get() as T;
   return {
