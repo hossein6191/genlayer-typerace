@@ -1,0 +1,6 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Link } from "react-router-dom";
+import { StrongMark } from "./BrandMark";
+export function Footer() {
+    return (_jsx("footer", { className: "mt-16 border-t border-border/70", children: _jsxs("div", { className: "mx-auto flex max-w-6xl flex-col gap-3 px-4 py-7 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between", children: [_jsxs("p", { className: "flex items-center gap-2", children: [_jsx(StrongMark, { className: "size-3.5 text-muted-foreground" }), _jsxs("span", { children: ["An unofficial community game about", " ", _jsx("a", { href: "https://genlayer.com", target: "_blank", rel: "noreferrer noopener", className: "text-foreground underline decoration-gl-purple/50 underline-offset-2 transition-colors hover:text-gl-purple", children: "GenLayer" })] })] }), _jsxs("p", { className: "flex items-center gap-4", children: [_jsx(Link, { to: "/admin", className: "transition-colors hover:text-foreground", title: "Create and run races", children: "Race control" }), _jsxs("span", { children: ["Built by", " ", _jsx("a", { href: "https://x.com/Hellishnum1", target: "_blank", rel: "noreferrer noopener", className: "font-semibold text-foreground transition-colors hover:text-gl-pink", children: "@Hellishnum1" })] })] })] }) }));
+}

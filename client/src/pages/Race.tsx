@@ -321,7 +321,10 @@ export default function Race() {
                   <textarea
                     {...engine.inputProps}
                     onFocus={() => setInputFocused(true)}
-                    onBlur={() => setInputFocused(false)}
+                    onBlur={() => {
+                      setInputFocused(false);
+                      engine.inputProps.onBlur();
+                    }}
                     className="absolute left-[-9999px] size-px opacity-0"
                     tabIndex={0}
                   />

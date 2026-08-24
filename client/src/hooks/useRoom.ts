@@ -61,6 +61,16 @@ function useClockOffset(socket: Socket | null) {
 
 export function useRoom(code: string | undefined, options: { asSpectator?: boolean } = {}) {
   const [socket, setSocket] = useState<Socket | null>(null);
+  /**
+   * Emits go through a ref, not through the state.
+   *
+   * The state is null for the render between creating the socket and storing
+   * it, and every emit in that window used to vanish without a trace. For
+   * progress that means the track freezes at zero while the player's own
+   * screen keeps counting, which looks like the server ignoring them.
+   */
+  const socketRef = useRef<Socket | null>(null);
+  const droppedRef = useRef(0);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [state, setState] = useState<RoomState | null>(null);
   const [summary, setSummary] = useState<RaceSummary | null>(null);
@@ -80,6 +90,7 @@ export function useRoom(code: string | undefined, options: { asSpectator?: boole
       reconnectionDelay: 700,
     });
 
+    socketRef.current = s;
     setSocket(s);
     setStatus("connecting");
 
@@ -126,33 +137,46 @@ export function useRoom(code: string | undefined, options: { asSpectator?: boole
     return () => {
       s.removeAllListeners();
       s.close();
+      socketRef.current = null;
       setSocket(null);
       setStatus("closed");
     };
   }, [code, asSpectator]);
 
+  const emit = useCallback((event: string, ...args: unknown[]) => {
+    const live = socketRef.current;
+    if (!live) {
+      droppedRef.current += 1;
+      if (droppedRef.current === 1) {
+        console.warn("[room] emitted before the socket existed:", event);
+      }
+      return;
+    }
+    (live.emit as (e: string, ...a: unknown[]) => void)(event, ...args);
+  }, []);
+
   const toLocalTime = useClockOffset(socket);
 
   const actions = {
-    setReady: useCallback((ready: boolean) => socket?.emit("room:ready", ready), [socket]),
+    setReady: useCallback((ready: boolean) => emit("room:ready", ready), [emit]),
     updateSettings: useCallback(
-      (patch: Partial<RoomSettings>) => socket?.emit("room:settings", patch),
-      [socket],
+      (patch: Partial<RoomSettings>) => emit("room:settings", patch),
+      [emit],
     ),
-    start: useCallback(() => socket?.emit("room:start"), [socket]),
-    abort: useCallback(() => socket?.emit("room:abort"), [socket]),
-    nextRound: useCallback(() => socket?.emit("room:next"), [socket]),
-    kick: useCallback((userId: string) => socket?.emit("room:kick", userId), [socket]),
-    sendChat: useCallback((text: string) => socket?.emit("room:chat", text), [socket]),
+    start: useCallback(() => emit("room:start"), [emit]),
+    abort: useCallback(() => emit("room:abort"), [emit]),
+    nextRound: useCallback(() => emit("room:next"), [emit]),
+    kick: useCallback((userId: string) => emit("room:kick", userId), [emit]),
+    sendChat: useCallback((text: string) => emit("room:chat", text), [emit]),
     sendProgress: useCallback(
-      (payload: ProgressPayload) => socket?.emit("race:progress", payload),
-      [socket],
+      (payload: ProgressPayload) => emit("race:progress", payload),
+      [emit],
     ),
     sendFinish: useCallback(
-      (payload: FinishPayload) => socket?.emit("race:finish", payload),
-      [socket],
+      (payload: FinishPayload) => emit("race:finish", payload),
+      [emit],
     ),
-    leave: useCallback(() => socket?.emit("room:leave"), [socket]),
+    leave: useCallback(() => emit("room:leave"), [emit]),
   };
 
   return { socket, status, state, summary, messages, error, boosts, actions, toLocalTime };

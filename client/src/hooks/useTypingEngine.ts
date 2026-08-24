@@ -72,6 +72,8 @@ export function useTypingEngine({
   const localStartRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const activeRef = useRef(active);
+  activeRef.current = active;
 
   // Callbacks live in refs so the ticking effect never has to re-subscribe.
   const onFinishRef = useRef(onFinish);
@@ -318,6 +320,30 @@ export function useTypingEngine({
     event.preventDefault();
   }, []);
 
+  /**
+   * Take focus back.
+   *
+   * The field is off screen, so losing focus is invisible: keystrokes simply
+   * stop arriving and the run looks frozen. Clicking a switch, the chat, or
+   * bare page background used to be enough to do it. Focus is only left alone
+   * when the player has deliberately moved to another field, which is the one
+   * case where stealing it back would be wrong.
+   */
+  const handleBlur = useCallback(() => {
+    window.setTimeout(() => {
+      if (!activeRef.current || finishedRef.current) return;
+      const el = document.activeElement;
+      const movedToAnotherField =
+        el instanceof HTMLElement &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable);
+      if (movedToAnotherField) return;
+      inputRef.current?.focus({ preventScroll: true });
+    }, 0);
+  }, []);
+
   /* ---------------------------------------------------------------- */
   /* Control                                                           */
   /* ---------------------------------------------------------------- */
@@ -351,6 +377,40 @@ export function useTypingEngine({
   useEffect(() => {
     if (active && !finished) focus();
   }, [active, finished, focus]);
+
+  /**
+   * Take focus back on the first keystroke.
+   *
+   * The input is off screen, so losing focus is invisible: the player keeps
+   * typing and nothing happens. Chasing blur events is fragile, but a keypress
+   * is unambiguous. If a run is live and a key arrives while focus is
+   * somewhere harmless, the field claims it, and because this happens during
+   * keydown the character that triggered it still lands.
+   */
+  useEffect(() => {
+    if (!active || finished) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      const el = document.activeElement;
+      if (el === inputRef.current) return;
+
+      // Somebody writing in the chat box keeps their cursor.
+      const inAnotherField =
+        el instanceof HTMLElement &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable);
+      if (inAnotherField) return;
+
+      inputRef.current?.focus({ preventScroll: true });
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [active, finished]);
 
   return {
     typed,
@@ -386,6 +446,7 @@ export function useTypingEngine({
       onCopy: handleCopyCut,
       onCut: handleCopyCut,
       onKeyDown: handleKeyDown,
+      onBlur: handleBlur,
       onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
       disabled: !active || finished,
       autoComplete: "off" as const,

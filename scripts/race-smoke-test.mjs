@@ -182,9 +182,64 @@ async function main() {
   );
   check("clean run not flagged", first.suspicious === false && second.suspicious === false);
 
+  /* ---- a second round on the same room, which is where it broke ---- */
+
+  const secondStarted = new Promise((resolve) => fastSocket.once("room:started", resolve));
+  const secondFinished = new Promise((resolve) => fastSocket.once("room:finished", resolve));
+
+  fastSocket.emit("room:start");
+  const secondStart = await secondStarted;
+  await sleep(300);
+
+  const secondPassage = liveState?.passage;
+  check("round two revealed a passage", Boolean(secondPassage?.text?.length));
+  check(
+    "round two drew a different passage",
+    secondPassage?.id !== passage.id,
+    `${passage.id} -> ${secondPassage?.id}`,
+  );
+  check(
+    "round two reset everyone to zero",
+    (liveState?.racers ?? []).every((r) => r.progress === 0 && r.correctChars === 0),
+    (liveState?.racers ?? []).map((r) => `${r.displayName}:${r.correctChars}`).join(" "),
+  );
+
+  // Type a little and confirm the server is actually receiving it this time.
+  const half = Math.floor(secondPassage.text.length / 2);
+  const startedTwo = secondStart.startsAt;
+  for (let i = 0; i < 12; i++) {
+    const target = Math.min(half, Math.floor(((i + 1) / 12) * half));
+    fastSocket.emit("race:progress", {
+      correctChars: target,
+      typedChars: target,
+      keystrokes: target,
+      errors: 0,
+      elapsedMs: Date.now() - startedTwo,
+      done: false,
+    });
+    await sleep(120);
+  }
+  await sleep(300);
+
+  const me = (liveState?.racers ?? []).find((r) => r.userId === fast.user.id);
+  check(
+    "round two progress reaches the server",
+    (me?.correctChars ?? 0) > 0,
+    `server sees ${me?.correctChars ?? 0} of ${secondPassage.text.length} chars`,
+  );
+  check("round two progress is on the track", (me?.progress ?? 0) > 0, `${((me?.progress ?? 0) * 100).toFixed(0)}%`);
+
+  await Promise.all([
+    typePassage(fastSocket, secondPassage.text, 120, startedTwo),
+    typePassage(slowSocket, secondPassage.text, 60, startedTwo),
+  ]);
+  const summaryTwo = await secondFinished;
+  check("round two produced standings", (summaryTwo.standings ?? []).length === 2);
+  check("round two counted as round 2", summaryTwo.round === 2, `round ${summaryTwo.round}`);
+
   // Persistence
   const profile = await fetch(`${BASE}/api/profile/${fast.user.id}`).then((r) => r.json());
-  check("result persisted to profile", profile.stats.races >= 1, `${profile.stats.races} races`);
+  check("both rounds persisted", profile.stats.races >= 2, `${profile.stats.races} races`);
   check("win counted", profile.stats.wins >= 1);
   check("personal best stored", profile.bests.some((b) => b.difficulty === "easy"));
 
