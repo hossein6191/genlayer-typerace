@@ -20,15 +20,16 @@ function requiredSecret(name: string, devFallback: string) {
   if (value && value.length >= 16) return value;
   if (isProd) {
     throw new Error(
-      `${name} must be set to a random string of at least 16 characters in production. ` +
-        `Generate one with:  openssl rand -hex 32`,
+      `${name} is not set. It must be a random string of at least 16 characters in ` +
+        `production, so generate one with "openssl rand -hex 32", set it as an ` +
+        `environment variable on your host, and redeploy`,
     );
   }
   if (value) {
-    console.warn(`[env] ${name} is shorter than 16 chars — using it anyway in ${NODE_ENV}.`);
+    console.warn(`[env] ${name} is shorter than 16 chars, using it anyway in ${NODE_ENV}`);
     return value;
   }
-  console.warn(`[env] ${name} is not set — generating an ephemeral one for ${NODE_ENV}.`);
+  console.warn(`[env] ${name} is not set, generating an ephemeral one for ${NODE_ENV}`);
   return devFallback;
 }
 
@@ -65,5 +66,9 @@ export const env = {
 } as const;
 
 if (isProd && !env.ADMIN_PASSWORD) {
-  throw new Error("ADMIN_PASSWORD must be set in production — the admin panel controls every race.");
+  throw new Error(
+    "ADMIN_PASSWORD is not set. It guards the panel that creates and starts races, " +
+      "so the server refuses to boot without it. Set it as an environment variable " +
+      "on your host and redeploy",
+  );
 }

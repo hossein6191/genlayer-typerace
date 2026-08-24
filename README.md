@@ -27,6 +27,13 @@ accurately you type
 
 Sign in is just a name, with no password, no wallet and nothing to connect
 
+## Stack
+
+A Vite and React client with an Express, Socket.IO and SQLite server in one workspace
+
+Race timing and scoring are server authoritative, and positions are pushed to every player ten
+times a second
+
 ## Run it
 
 ```bash
@@ -35,37 +42,9 @@ cp .env.example server/.env
 npm run dev
 ```
 
-Open <http://localhost:5173>, and <http://localhost:5173/admin> to create a race room
+Open <http://localhost:5173>
 
-## Configure
-
-`server/.env`
-
-| Variable | Default | Notes |
-|---|---|---|
-| `SESSION_SECRET` | random in dev | Required in production, `openssl rand -hex 32` |
-| `ADMIN_PASSWORD` | `genlayer` in dev | Required in production |
-| `PUBLIC_URL` | `http://localhost:5173` | The URL players visit |
-| `SERVER_PORT` | `8787` | Wins over `PORT` |
-| `DATABASE_FILE` | `./data/genlayer-typerace.db` | SQLite file |
-
-## Deploy
-
-```bash
-docker build -t genlayer-typerace .
-docker run -d -p 8787:8787 \
-  -v typerace-data:/app/server/data \
-  -e SESSION_SECRET="$(openssl rand -hex 32)" \
-  -e ADMIN_PASSWORD="pick-a-strong-one" \
-  -e PUBLIC_URL="https://your-domain" \
-  genlayer-typerace
-```
-
-Records live in `/app/server/data`, so attach a volume there or a redeploy wipes the leaderboard
-
-- **Railway** uses [`railway.json`](railway.json), and needs a Volume mounted at `/app/server/data`
-- **Render** uses [`render.yaml`](render.yaml), which already declares the disk
-- **Anywhere else** `npm ci && npm run build && node server/dist/index.js`
+[`.env.example`](.env.example) lists every setting the server reads
 
 ## Scripts
 

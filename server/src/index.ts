@@ -65,7 +65,7 @@ if (fs.existsSync(clientDist)) {
     res.sendFile(path.join(clientDist, "index.html"));
   });
 } else if (env.isProd) {
-  console.warn(`[server] client build not found at ${clientDist} — run "npm run build" first.`);
+  console.warn(`[server] client build not found at ${clientDist}, run "npm run build" first`);
 }
 
 app.use((_req, res) => {
@@ -102,7 +102,7 @@ server.listen(env.PORT, () => {
 });
 
 function shutdown(signal: string) {
-  console.log(`\n[server] ${signal} received — closing.`);
+  console.log(`\n[server] ${signal} received, closing`);
   server.close(() => {
     try {
       db.close();
