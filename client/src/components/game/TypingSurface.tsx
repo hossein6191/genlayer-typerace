@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 
 interface TypingSurfaceProps {
   text: string;
+  /** What the player actually entered, so a mistake can show their character. */
+  typed?: string;
   charStates: CharState[];
   /** Index of the caret — equal to the number of characters committed. */
   cursor: number;
@@ -60,6 +62,7 @@ function chunk(text: string) {
 
 export function TypingSurface({
   text,
+  typed = "",
   charStates,
   cursor,
   locked = false,
@@ -174,11 +177,25 @@ export function TypingSurface({
                   const index = piece.start + i;
                   const state = charStates[index] ?? "pending";
                   const isCaret = index === cursor;
+                  // On a mistake, show the character the player actually
+                  // entered rather than the one the passage wanted. Showing the
+                  // expected character hides the cause: someone typing in the
+                  // wrong keyboard layout sees only red English letters and has
+                  // no way to tell what their keyboard is really producing.
+                  const entered = state === "wrong" ? typed[index] : undefined;
+                  const glyph =
+                    state === "wrong"
+                      ? entered === " "
+                        ? "␣"
+                        : (entered ?? ch)
+                      : ch;
+
                   return (
                     <span
                       key={index}
                       ref={isCaret ? caretAnchorRef : undefined}
                       data-state={state}
+                      title={state === "wrong" ? `Expected "${ch === " " ? "space" : ch}"` : undefined}
                       className={cn(
                         "relative transition-colors duration-75",
                         // Dim enough to read as "not yet typed", bright enough
@@ -186,11 +203,11 @@ export function TypingSurface({
                         state === "pending" && "text-muted-foreground/70",
                         state === "correct" && "text-foreground",
                         state === "wrong" &&
-                          "text-bad bg-bad/12 rounded-[3px] underline decoration-bad/70 decoration-2 underline-offset-[3px]",
+                          "text-bad bg-bad/15 rounded-[3px] underline decoration-bad/70 decoration-2 underline-offset-[3px]",
                         state === "current" && "text-foreground",
                       )}
                     >
-                      {ch === " " && state === "wrong" ? "␣" : ch}
+                      {glyph}
                     </span>
                   );
                 })}

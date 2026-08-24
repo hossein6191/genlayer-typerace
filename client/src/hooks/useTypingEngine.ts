@@ -39,6 +39,9 @@ export interface UseTypingEngineOptions {
   onProgress?: (snapshot: TypingSnapshot) => void;
 }
 
+/** Sentinel the on screen keyboard maps to its Backspace key. */
+export const BACKSPACE_KEY = "\b";
+
 const PROGRESS_INTERVAL_MS = 100;
 const SAMPLE_INTERVAL_MS = 1_000;
 
@@ -126,8 +129,13 @@ export function useTypingEngine({
 
   const snapshotRef = useRef(snapshot);
   const correctCharsRef = useRef(correctChars);
+  // The entered text, readable synchronously. Two taps inside one tick would
+  // otherwise both start from the value React last rendered, and the second
+  // would overwrite the first.
+  const typedRef = useRef(typed);
   snapshotRef.current = snapshot;
   correctCharsRef.current = correctChars;
+  typedRef.current = typed;
 
   /* ---------------------------------------------------------------- */
   /* Finishing                                                         */
@@ -206,38 +214,51 @@ export function useTypingEngine({
   /* Input handling                                                    */
   /* ---------------------------------------------------------------- */
 
-  const handleChange = useCallback(
-    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const [blocked, setBlocked] = useState(false);
+
+  /**
+   * The single place a new typed value is accepted.
+   *
+   * Used by the real textarea and by taps on the on screen keyboard, so both
+   * routes score identically.
+   */
+  const applyValue = useCallback(
+    (raw: string) => {
       if (!active || finishedRef.current) return;
 
-      const raw = event.target.value;
-      // Never accept more characters than the passage holds.
+      const current = typedRef.current;
       let next = raw.slice(0, text.length);
 
-      // Count only *additions* as keystrokes; backspacing is not a keystroke
-      // for accuracy purposes, which is how every typing test scores it.
-      if (next.length > typed.length) {
-        const added = next.length - typed.length;
+      // Count only additions as keystrokes; backspacing is not a keystroke for
+      // accuracy purposes, which is how every typing test scores it.
+      if (next.length > current.length) {
+        const added = next.length - current.length;
 
         // A jump of several characters in one input event is a paste, an
-        // autofill, or a script — none of which are typing.
+        // autofill, or a script, none of which are typing.
         if (added > 2) {
           pasteAttemptsRef.current += 1;
           return;
         }
 
         keystrokesRef.current += added;
-        for (let i = typed.length; i < next.length; i++) {
+        for (let i = current.length; i < next.length; i++) {
           if (next[i] !== text[i]) errorsRef.current += 1;
         }
 
-        // Refuse to let the error trail grow without bound — the player has to
-        // go back and fix it, which is the whole point of the accuracy rule.
+        // The error trail is capped so a player has to go back and fix their
+        // mistakes. Hitting the cap is reported, because input that silently
+        // stops responding reads as the game having frozen.
         let correct = 0;
         while (correct < next.length && next[correct] === text[correct]) correct++;
         if (next.length - correct > errorRunway) {
           next = next.slice(0, correct + errorRunway);
+          setBlocked(true);
+        } else {
+          setBlocked(false);
         }
+      } else {
+        setBlocked(false);
       }
 
       if (localStartRef.current == null && startedAt == null && next.length > 0) {
@@ -245,11 +266,12 @@ export function useTypingEngine({
         lastSampleAtRef.current = localStartRef.current;
       }
 
+      typedRef.current = next;
       setTyped(next);
 
       if (next.length === text.length && next === text) {
-        // Point the refs at the finished state before the snapshot is taken —
-        // React has not re-rendered yet at this instant.
+        // Point the refs at the finished state before the snapshot is taken,
+        // because React has not re-rendered yet at this instant.
         correctCharsRef.current = text.length;
         snapshotRef.current = {
           ...snapshotRef.current,
@@ -259,8 +281,28 @@ export function useTypingEngine({
         finish();
       }
     },
-    [active, text, typed.length, startedAt, errorRunway, finish],
+    [active, text, startedAt, errorRunway, finish],
   );
+
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => applyValue(event.target.value),
+    [applyValue],
+  );
+
+  /** Type one character, as a tap on the on screen keyboard does. */
+  const typeChar = useCallback(
+    (char: string) => applyValue(typedRef.current + char),
+    [applyValue],
+  );
+
+  /** Delete the last character, as Backspace does. */
+  const backspace = useCallback(() => {
+    if (!active || finishedRef.current) return;
+    setBlocked(false);
+    const next = typedRef.current.slice(0, -1);
+    typedRef.current = next;
+    setTyped(next);
+  }, [active]);
 
   const handlePaste = useCallback((event: React.ClipboardEvent) => {
     event.preventDefault();
@@ -281,9 +323,11 @@ export function useTypingEngine({
   /* ---------------------------------------------------------------- */
 
   const reset = useCallback(() => {
+    typedRef.current = "";
     setTyped("");
     setElapsedMs(0);
     setFinished(false);
+    setBlocked(false);
     finishedRef.current = false;
     keystrokesRef.current = 0;
     errorsRef.current = 0;
@@ -314,6 +358,16 @@ export function useTypingEngine({
     correctChars,
     wrongTrail,
     nextChar,
+    /**
+     * What the player should press next. With mistakes on screen the answer is
+     * Backspace, not the next letter, so the on screen keyboard stops pointing
+     * somewhere the player cannot legally go.
+     */
+    nextKeyChar: wrongTrail > 0 ? BACKSPACE_KEY : nextChar,
+    /** True while input is being refused because the error trail is full. */
+    blocked,
+    typeChar,
+    backspace,
     snapshot,
     finished,
     elapsedMs,

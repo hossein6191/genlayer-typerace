@@ -31,6 +31,7 @@ import { Countdown } from "@/components/game/Countdown";
 import { Hud } from "@/components/game/Hud";
 import { RaceTrack, laneHue } from "@/components/game/RaceTrack";
 import { ResultsPanel } from "@/components/game/ResultsPanel";
+import { TypingHint } from "@/components/game/TypingHint";
 import { TypingSurface } from "@/components/game/TypingSurface";
 import { SignInDialog } from "@/components/layout/SignInDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -287,6 +288,7 @@ export default function Race() {
                 <>
                   <TypingSurface
                     text={state.passage.text}
+                    typed={engine.typed}
                     charStates={engine.charStates}
                     cursor={engine.typed.length}
                     locked={!racing || Boolean(me?.isSpectator) || !inputFocused}
@@ -323,6 +325,16 @@ export default function Race() {
                 </div>
               )}
             </div>
+
+            {racing && state.passage && (
+              <TypingHint
+                text={state.passage.text}
+                typed={engine.typed}
+                wrongTrail={engine.wrongTrail}
+                blocked={engine.blocked}
+                className="mx-5 mb-4"
+              />
+            )}
 
             {(racing || phase === "finished") && !me?.isSpectator && (
               <div className="border-t border-border px-5 py-4">
@@ -367,7 +379,9 @@ export default function Race() {
               compact
               sound={soundOn}
               listenWhileTyping
-              highlightChar={racing ? engine.nextChar : null}
+              highlightChar={racing ? engine.nextKeyChar : null}
+              onType={racing ? engine.typeChar : undefined}
+              onBackspace={racing ? engine.backspace : undefined}
               maxWidth="52rem"
               className="mx-auto"
             />

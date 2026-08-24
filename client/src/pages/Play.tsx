@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VintageKeyboard } from "@/components/ui/vintage-keyboard";
 import { DifficultyPicker } from "@/components/game/DifficultyPicker";
 import { Hud } from "@/components/game/Hud";
+import { TypingHint } from "@/components/game/TypingHint";
 import { RaceTrack } from "@/components/game/RaceTrack";
 import { TypingSurface } from "@/components/game/TypingSurface";
 import { SignInDialog } from "@/components/layout/SignInDialog";
@@ -352,6 +353,7 @@ export default function Play() {
             <>
               <TypingSurface
                 text={passage.text}
+                typed={engine.typed}
                 charStates={engine.charStates}
                 cursor={engine.typed.length}
                 locked={!inputFocused && !engine.finished}
@@ -372,6 +374,16 @@ export default function Play() {
             </>
           )}
         </div>
+
+        {passage && (
+          <TypingHint
+            text={passage.text}
+            typed={engine.typed}
+            wrongTrail={engine.wrongTrail}
+            blocked={engine.blocked}
+            className="mx-5 mb-4"
+          />
+        )}
 
         <div className="border-t border-border px-5 py-4">
           <Hud
@@ -535,7 +547,9 @@ export default function Play() {
           compact
           sound={prefs.sound}
           listenWhileTyping
-          highlightChar={engine.nextChar}
+          highlightChar={engine.nextKeyChar}
+          onType={engine.typeChar}
+          onBackspace={engine.backspace}
           maxWidth="52rem"
           className="mx-auto"
         />

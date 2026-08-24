@@ -252,6 +252,31 @@ const CHAR_TO_KEY: Record<string, { id: string; shift: boolean }> = (() => {
   map[" "] = { id: "space", shift: false };
   map["\n"] = { id: "enter", shift: false };
   map["\t"] = { id: "tab", shift: false };
+  // Sentinel used when the caller wants Backspace pointed at instead of a
+  // letter, which is the case whenever there are mistakes to clear.
+  map["\b"] = { id: "backspace", shift: false };
+  return map;
+})();
+
+/** The character a key produces, or null for keys that produce none. */
+const KEY_ID_TO_CHAR: Record<string, { lower: string; upper: string }> = (() => {
+  const map: Record<string, { lower: string; upper: string }> = {};
+  for (const row of ROWS) {
+    for (const key of row) {
+      if (key.id === "space") {
+        map[key.id] = { lower: " ", upper: " " };
+        continue;
+      }
+      if (key.label && key.label.length === 1) {
+        map[key.id] = {
+          lower: key.label.toLowerCase(),
+          upper: key.shiftLabel && key.shiftLabel.length === 1
+            ? key.shiftLabel
+            : key.label.toUpperCase(),
+        };
+      }
+    }
+  }
   return map;
 })();
 
@@ -592,6 +617,23 @@ let soundEnabled = true;
 /** Lets the game mute the board without unmounting it. */
 export function setKeyboardSoundEnabled(enabled: boolean) {
   soundEnabled = enabled;
+}
+
+/**
+ * Browsers only let an AudioContext start inside a user gesture, and only if
+ * the call happens in that same task. Creating the context from a promise
+ * callback leaves it suspended forever, which is silence with no error.
+ * Call this synchronously from the event handler.
+ */
+export function unlockKeyboardAudio() {
+  if (typeof window === "undefined" || !soundEnabled) return;
+  if (thockEngine) {
+    if (thockEngine.ctx.state === "suspended") void thockEngine.ctx.resume();
+    return;
+  }
+  // getThockEngine constructs the AudioContext before its first await, so
+  // starting it here keeps it inside the gesture.
+  void getThockEngine();
 }
 
 function playKeySound(category: SoundCategory, muted: boolean, panHint = 0) {
@@ -1015,6 +1057,7 @@ const Key = memo(function Key({
   registerTrigger,
   onActivate,
   onDeactivate,
+  onTap,
 }: {
   config: KeyConfig;
   rowIndex: number;
@@ -1025,6 +1068,7 @@ const Key = memo(function Key({
   registerTrigger: (id: string, trigger: KeyTrigger) => () => void;
   onActivate: (id: string) => void;
   onDeactivate: (id: string) => void;
+  onTap?: (id: string) => void;
 }) {
   const {
     id,
@@ -1096,12 +1140,20 @@ const Key = memo(function Key({
 
   const handlePress = useCallback(
     (event: ReactPointerEvent<HTMLButtonElement>) => {
-      event.currentTarget.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // Some pointer sources refuse capture. The press still counts.
+      }
+      // Unlock inside the gesture, before anything async runs.
+      unlockKeyboardAudio();
       pressPointer();
       onActivate(id);
+      onTap?.(id);
       playKeySound(getSoundCategory(id), !!muted, KEY_PAN[id] ?? 0);
     },
-    [id, muted, pressPointer, onActivate],
+    [id, muted, pressPointer, onActivate, onTap],
   );
 
   const handleRelease = useCallback(() => {
@@ -1311,6 +1363,9 @@ export interface VintageKeyboardProps {
    * types into an input, so it opts out of that guard.
    */
   listenWhileTyping?: boolean;
+  /** Tapping a letter key types it. Tapping Backspace deletes. */
+  onType?: (char: string) => void;
+  onBackspace?: () => void;
   className?: string;
   maxWidth?: string;
 }
@@ -1323,6 +1378,8 @@ export const VintageKeyboard = ({
   sound = true,
   highlightChar = null,
   listenWhileTyping = false,
+  onType,
+  onBackspace,
   className,
   maxWidth,
 }: VintageKeyboardProps) => {
@@ -1350,6 +1407,38 @@ export const VintageKeyboard = ({
     }
     return ids;
   }, [highlightChar]);
+
+  // Shift state for taps, so someone using the board with a mouse or a
+  // touchscreen can still reach capitals and the symbol row. Held in a ref as
+  // well: a Shift tap and the letter tap after it can land in the same tick,
+  // and the letter would otherwise read the pre-Shift value.
+  const [shiftLatched, setShiftLatched] = useState(false);
+  const shiftLatchedRef = useRef(false);
+
+  const setShift = useCallback((next: boolean) => {
+    shiftLatchedRef.current = next;
+    setShiftLatched(next);
+  }, []);
+
+  const handleTap = useCallback(
+    (id: string) => {
+      if (id === "backspace") {
+        onBackspace?.();
+        return;
+      }
+      if (id === "lshift" || id === "rshift") {
+        setShift(!shiftLatchedRef.current);
+        return;
+      }
+      if (!onType) return;
+
+      const pair = KEY_ID_TO_CHAR[id];
+      if (!pair) return;
+      onType(shiftLatchedRef.current ? pair.upper : pair.lower);
+      if (shiftLatchedRef.current) setShift(false);
+    },
+    [onType, onBackspace, setShift],
+  );
 
   const registerTrigger = useCallback((id: string, trigger: KeyTrigger) => {
     keyTriggersRef.current[id] = trigger;
@@ -1420,10 +1509,6 @@ export const VintageKeyboard = ({
   }, []);
 
   useEffect(() => {
-    void getThockEngine();
-  }, []);
-
-  useEffect(() => {
     const held = new Set<string>();
 
     const isTypingTarget = (target: EventTarget | null) => {
@@ -1470,6 +1555,9 @@ export const VintageKeyboard = ({
 
       const id = CODE_TO_KEY_ID[event.code];
       if (!id || held.has(id)) return;
+
+      // Inside the gesture, before any promise runs.
+      unlockKeyboardAudio();
 
       held.add(id);
       keyTriggersRef.current[id]?.press();
@@ -1520,11 +1608,10 @@ export const VintageKeyboard = ({
         padding: embedded ? 0 : container.padding,
         background: embedded ? "transparent" : theme.pageBackground,
       }}
-      // Embedded, the board is a visual aid beside the real text field.
-      // Announcing sixty buttons a screen-reader user cannot usefully press
-      // would only get in the way of the passage itself.
+      // The board is a visual aid next to the real text field, so it stays out
+      // of the screen reader's way. It is not marked inert: taps have to keep
+      // working, which is the whole point of an on screen keyboard.
       aria-hidden={embedded || undefined}
-      inert={embedded || undefined}
     >
       <style>{KEY_STYLE_TAG}</style>
       <div
@@ -1783,10 +1870,14 @@ export const VintageKeyboard = ({
                           tier={tier}
                           theme={theme}
                           compact={compact}
-                          isNext={nextKeys.has(key.id)}
+                          isNext={
+                            nextKeys.has(key.id) ||
+                            (shiftLatched && (key.id === "lshift" || key.id === "rshift"))
+                          }
                           registerTrigger={registerTrigger}
                           onActivate={activateKey}
                           onDeactivate={deactivateKey}
+                          onTap={handleTap}
                         />
                       ))}
                     </div>
