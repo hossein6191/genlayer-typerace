@@ -1,0 +1,29 @@
+# One-click deploy on Render: https://render.com/deploy
+services:
+  - type: web
+    name: genlayer-typerace
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    disk:
+      # SQLite lives on this disk; without it every redeploy wipes the ledger.
+      name: typerace-data
+      mountPath: /app/server/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      - key: DATABASE_FILE
+        value: /app/server/data/genlayer-typerace.db
+      - key: TRUST_PROXY
+        value: "true"
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false

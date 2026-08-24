@@ -1,0 +1,290 @@
+@import url("https://api.fontshare.com/v2/css?f[]=switzer@300,400,500,600,700,800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Typefaces
+   Brand guideline calls for Lineca (titles) + Switzer (body/UI).
+   Lineca is a licensed foundry font and is not redistributable, so the
+   UI ships with Switzer everywhere (the guideline explicitly allows
+   Switzer for body copy and supplementary titles). Drop Lineca web
+   files into /public/fonts and add an @font-face block to enable it.
+   ------------------------------------------------------------------ */
+
+@theme {
+  /* ---- GenLayer brand core (Brand Guidelines v1.0, section 03) ---- */
+  --color-gl-blue: #110fff;
+  --color-gl-navy: #282b5d;
+  --color-gl-pink: #e37df7;
+  --color-gl-purple: #9b6af6;
+  --color-gl-black: #000000;
+  --color-gl-white: #ffffff;
+
+  /* Lightened blue ramp — #110FFF is too dark to sit on a dark canvas */
+  --color-gl-blue-300: #a3a2ff;
+  --color-gl-blue-400: #7f7dff;
+  --color-gl-blue-500: #5b5aff;
+  --color-gl-blue-600: #3a37ff;
+  --color-gl-blue-700: #110fff;
+
+  /* ---- Semantic surface scale ---- */
+  --color-background: #05060e;
+  --color-surface: #0a0c1a;
+  --color-surface-2: #10132a;
+  --color-surface-3: #171b3c;
+  --color-foreground: #f4f5ff;
+  --color-muted: #12152b;
+  --color-muted-foreground: #99a0c4;
+  --color-border: #232849;
+  --color-border-strong: #343a66;
+
+  /* ---- Feedback ---- */
+  --color-ok: #43e08b;
+  --color-ok-dim: #16794a;
+  --color-warn: #ffb443;
+  --color-bad: #ff4d6d;
+  --color-bad-dim: #7a1f30;
+
+  /* ---- Typography ---- */
+  --font-sans:
+    "Switzer", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-display:
+    "Lineca", "Switzer", ui-sans-serif, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* ---- Motion ---- */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Radii ---- */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* ---- Animations ---- */
+  --animate-drift: drift 22s linear infinite;
+  --animate-pulse-glow: pulse-glow 2.4s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.6s linear infinite;
+  --animate-rise: rise 0.5s var(--ease-out-quint) both;
+  --animate-caret: caret 1.05s steps(1) infinite;
+}
+
+@keyframes drift {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      1200px 0,
+      -900px 0;
+  }
+}
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: -180% 0;
+  }
+  to {
+    background-position: 180% 0;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Brand "Data Waves" texture, section 06 — a quiet flow of data behind
+     everything, animated only when the visitor allows motion. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        70rem 40rem at 15% -10%,
+        color-mix(in oklab, var(--color-gl-purple) 22%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        55rem 35rem at 92% 8%,
+        color-mix(in oklab, var(--color-gl-blue) 26%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        60rem 45rem at 50% 115%,
+        color-mix(in oklab, var(--color-gl-pink) 12%, transparent),
+        transparent 60%
+      );
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: -10%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.4;
+    background-image:
+      repeating-linear-gradient(
+        100deg,
+        transparent 0 38px,
+        color-mix(in oklab, var(--color-gl-purple) 9%, transparent) 38px 39px,
+        transparent 39px 78px
+      ),
+      repeating-linear-gradient(
+        80deg,
+        transparent 0 52px,
+        color-mix(in oklab, var(--color-gl-blue) 7%, transparent) 52px 53px,
+        transparent 53px 104px
+      );
+    mask-image: radial-gradient(90% 70% at 50% 30%, #000 20%, transparent 78%);
+    animation: var(--animate-drift);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gl-purple);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-gl-purple) 45%, transparent);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 8px;
+    border: 2px solid var(--color-surface);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gl-purple);
+  }
+}
+
+@layer components {
+  .gl-gradient-text {
+    background-image: linear-gradient(
+      100deg,
+      var(--color-gl-pink),
+      var(--color-gl-purple) 55%,
+      var(--color-gl-blue-400)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .gl-panel {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--color-surface-2) 92%, transparent),
+        color-mix(in oklab, var(--color-surface) 92%, transparent)
+      );
+    border: 1px solid var(--color-border);
+    backdrop-filter: blur(14px);
+  }
+
+  .gl-panel-glow {
+    position: relative;
+  }
+  .gl-panel-glow::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      130deg,
+      color-mix(in oklab, var(--color-gl-pink) 55%, transparent),
+      color-mix(in oklab, var(--color-gl-purple) 35%, transparent) 40%,
+      transparent 70%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .gl-grain {
+    background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Race smoke test
+        env:
+          SERVER_PORT: 8787
+          SESSION_SECRET: ci-session-secret-not-used-anywhere-else
+          ADMIN_PASSWORD: ci-admin-password
+          DATABASE_FILE: ./data/ci.db
+        run: |
+          node server/dist/index.js &
+          SERVER_PID=$!
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8787/api/health > /dev/null && break
+            sleep 1
+          done
+          node scripts/race-smoke-test.mjs http://localhost:8787 ci-admin-password
+          STATUS=$?
+          kill $SERVER_PID
+          exit $STATUS
