@@ -145,9 +145,35 @@ async function main() {
 
   const started = new Promise((resolve) => fastSocket.once("room:started", resolve));
   const finished = new Promise((resolve) => fastSocket.once("room:finished", resolve));
+  // The server sends the full state when something structural changes and a
+  // slim tick for each race frame, so the probe merges them the same way the
+  // browser does.
   let liveState = null;
   fastSocket.on("room:state", (s) => {
     liveState = s;
+  });
+  fastSocket.on("room:tick", (tick) => {
+    if (!liveState) return;
+    const byId = new Map(tick.r.map((row) => [row[0], row]));
+    liveState = {
+      ...liveState,
+      serverTime: tick.t,
+      racers: liveState.racers.map((r) => {
+        const row = byId.get(r.userId);
+        if (!row) return r;
+        return {
+          ...r,
+          progress: row[1],
+          wpm: row[2],
+          accuracy: row[3],
+          errors: row[4],
+          correctChars: row[5],
+          boostUntil: row[6],
+          finishedAt: row[7],
+          position: row[8],
+        };
+      }),
+    };
   });
 
   fastSocket.emit("room:start");

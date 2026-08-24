@@ -5,6 +5,7 @@ import type {
   RaceSummary,
   RoomSettings,
   RoomState,
+  RoomTick,
 } from "@/lib/types";
 
 interface ProgressPayload {
@@ -120,6 +121,36 @@ export function useRoom(code: string | undefined, options: { asSpectator?: boole
       setState(next);
       // A fresh round clears the previous podium.
       if (next.phase === "countdown" || next.phase === "lobby") setSummary(null);
+    });
+
+    // A race frame carries only the moving numbers, so it is folded into the
+    // last full state rather than replacing it. Names, avatars and the passage
+    // arrive with room:state and stay put.
+    s.on("room:tick", (tick: RoomTick) => {
+      setState((prev) => {
+        if (!prev) return prev;
+        const byId = new Map(tick.r.map((row) => [row[0], row]));
+        let changed = false;
+
+        const racers = prev.racers.map((racer) => {
+          const row = byId.get(racer.userId);
+          if (!row) return racer;
+          changed = true;
+          return {
+            ...racer,
+            progress: row[1],
+            wpm: row[2],
+            accuracy: row[3],
+            errors: row[4],
+            correctChars: row[5],
+            boostUntil: row[6],
+            finishedAt: row[7],
+            position: row[8],
+          };
+        });
+
+        return changed ? { ...prev, racers, serverTime: tick.t } : prev;
+      });
     });
 
     s.on("room:finished", (result: RaceSummary) => setSummary(result));

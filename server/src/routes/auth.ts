@@ -14,11 +14,17 @@ import { findOrCreateUser, toPublicUser, userProfile } from "../lib/db.js";
 
 export const authRouter = Router();
 
+/**
+ * Sign-in is a name lookup, not an expensive operation, and a whole room of
+ * players at one meetup shares a single IP. The old limit of forty per ten
+ * minutes locked out everyone after the fortieth person on the same wifi.
+ */
 const signInLimiter = rateLimit({
   windowMs: 10 * 60_000,
-  limit: 40,
+  limit: 300,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  message: { error: "too_many_attempts" },
 });
 
 const adminLimiter = rateLimit({

@@ -12,3 +12,12 @@ client/dist/
 coverage/
 ._*
 .AppleDouble
+
+# TypeScript must never emit next to its sources. A stray useRoom.js there is
+# resolved by the bundler in preference to useRoom.ts, which silently freezes
+# that module at whatever it said when the file was written.
+client/src/**/*.js
+client/src/**/*.jsx
+client/src/**/*.d.ts
+!client/src/vite-env.d.ts
+server/src/**/*.js

@@ -519,6 +519,23 @@ export default function Race() {
                     </div>
                   </div>
 
+                  <div>
+                    <Label htmlFor="mx" className="mb-1.5 block">
+                      Max racers
+                    </Label>
+                    <Input
+                      id="mx"
+                      type="number"
+                      min={2}
+                      max={64}
+                      value={state.settings.maxPlayers}
+                      onChange={(e) =>
+                        actions.updateSettings({ maxPlayers: Number(e.target.value) })
+                      }
+                      className="h-8 text-xs"
+                    />
+                  </div>
+
                   <label className="flex cursor-pointer items-center justify-between gap-2 text-xs">
                     <span className="text-muted-foreground">Let people join mid-race</span>
                     <Switch

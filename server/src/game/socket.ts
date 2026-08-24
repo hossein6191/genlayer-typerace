@@ -66,8 +66,14 @@ export function attachSocketServer(httpServer: HttpServer) {
 
   const tickers = new Map<string, NodeJS.Timeout>();
 
+  /** Everything, including names and the passage. Sent when structure changes. */
   function pushState(room: Room) {
     io.to(roomChannel(room.code)).emit("room:state", room.toState());
+  }
+
+  /** Just the moving numbers, which is what a race frame actually needs. */
+  function pushTick(room: Room) {
+    io.to(roomChannel(room.code)).emit("room:tick", room.toTick());
   }
 
   function ensureTicker(room: Room) {
@@ -91,7 +97,9 @@ export function attachSocketServer(httpServer: HttpServer) {
         tickers.delete(live.code);
         return;
       }
-      pushState(live);
+      // A live race only needs the numbers; anything else needs the lot.
+      if (live.phase === "racing") pushTick(live);
+      else pushState(live);
     }, desired) as NodeJS.Timeout & { _glInterval?: number };
 
     handle._glInterval = desired;

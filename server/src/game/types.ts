@@ -127,8 +127,36 @@ export interface FinishPayload extends ProgressPayload {
 
 /* Socket event maps -------------------------------------------------- */
 
+/**
+ * The per-frame update.
+ *
+ * Only the numbers that move during a race, as a positional array rather than
+ * an object, because the field names were most of the payload. Names, avatars,
+ * host flags and the passage go out in `room:state`, which is sent when
+ * something structural changes rather than ten times a second.
+ *
+ * [userId, progress, wpm, accuracy, errors, correctChars, boostUntil, finishedAt, position]
+ */
+export type RacerTick = [
+  string,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number | null,
+  number | null,
+  number | null,
+];
+
+export interface RoomTick {
+  t: number;
+  r: RacerTick[];
+}
+
 export interface ServerToClientEvents {
   "room:state": (state: RoomState) => void;
+  "room:tick": (tick: RoomTick) => void;
   "room:countdown": (payload: { startsAt: number; serverTime: number }) => void;
   "room:started": (payload: { startsAt: number; endsAt: number; serverTime: number }) => void;
   "room:finished": (summary: RaceSummary) => void;

@@ -18,6 +18,21 @@ jobs:
 
       - run: npm ci --no-audit --no-fund
 
+      - name: No compiled output beside the sources
+        run: |
+          # A stray useRoom.js next to useRoom.ts is resolved by the bundler in
+          # preference to the TypeScript, which silently freezes that module at
+          # whatever it said when the file was written. The build keeps passing
+          # and the change never ships.
+          STRAY=$(find client/src server/src \
+            \( -name '*.js' -o -name '*.jsx' \) -not -name '._*' | sort)
+          if [ -n "$STRAY" ]; then
+            echo "compiled output found in the source tree:"
+            echo "$STRAY"
+            exit 1
+          fi
+          echo "source trees are TypeScript only"
+
       - name: Type-check
         run: npm run typecheck
 
@@ -104,6 +119,18 @@ jobs:
           test "$CODE" = "200"
 
           echo "the browser can load the app"
+
+      - name: The race protocol survived the bundler
+        run: |
+          # Every socket event the client has to handle must appear in the
+          # shipped JavaScript. This is the check that would have caught a
+          # module frozen by a stale compiled twin.
+          ASSETS=$(docker exec typerace sh -c 'cat /app/client/dist/assets/*.js')
+          for EVENT in room:state room:tick room:finished race:progress race:finish; do
+            echo "$ASSETS" | grep -q "$EVENT" \
+              && echo "  ok   $EVENT" \
+              || { echo "  MISSING from the bundle: $EVENT"; exit 1; }
+          done
 
       - name: Check the database was written to the volume
         run: |

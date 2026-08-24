@@ -17,6 +17,7 @@ import {
   type ProgressPayload,
   type RaceSummary,
   type RacerState,
+  type RoomTick,
   type RoomSettings,
   type RoomState,
 } from "./types.js";
@@ -515,6 +516,31 @@ export class Room {
   /* ---------------------------------------------------------------- */
   /* Serialisation                                                     */
   /* ---------------------------------------------------------------- */
+
+  /**
+   * The moving numbers only. A full state at ten frames a second spends most
+   * of its bytes repeating names and the passage text, which never change
+   * mid-race, and the cost of that grows with the square of the head count.
+   */
+  toTick(): RoomTick {
+    const now = Date.now();
+    return {
+      t: now,
+      r: [...this.racers.values()]
+        .filter((r) => !r.isSpectator)
+        .map((r) => [
+          r.userId,
+          Math.round(r.progress * 1000) / 1000,
+          Math.round(r.wpm * 10) / 10,
+          Math.round(r.accuracy * 10) / 10,
+          r.errors,
+          r.correctChars,
+          r.boostUntil && r.boostUntil > now ? r.boostUntil : null,
+          r.finishedAt,
+          r.position,
+        ]),
+    };
+  }
 
   toState(): RoomState {
     const now = Date.now();

@@ -149,6 +149,7 @@ export default function Admin() {
   const [timeLimitSec, setTimeLimitSec] = useState(180);
   const [allowLateJoin, setAllowLateJoin] = useState(true);
   const [passageId, setPassageId] = useState<string | null>(null);
+  const [maxPlayers, setMaxPlayers] = useState(24);
 
   const load = useCallback(async () => {
     if (!isAdmin) return;
@@ -184,6 +185,7 @@ export default function Admin() {
         timeLimitSec,
         allowLateJoin,
         passageId,
+        maxPlayers,
       });
       // The server builds the link from PUBLIC_URL, which may not match the
       // origin the admin is actually browsing from. Prefer what they can see.
@@ -311,6 +313,22 @@ export default function Admin() {
                     value={mode === "sprint" ? 60 : timeLimitSec}
                     onChange={(e) => setTimeLimitSec(Number(e.target.value))}
                   />
+                </div>
+                <div>
+                  <Label htmlFor="a-max" className="mb-1.5 block">
+                    Max racers
+                  </Label>
+                  <Input
+                    id="a-max"
+                    type="number"
+                    min={2}
+                    max={64}
+                    value={maxPlayers}
+                    onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Up to 64. Anyone arriving after that is turned away
+                  </p>
                 </div>
               </div>
 

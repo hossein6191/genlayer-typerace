@@ -80,6 +80,27 @@ export interface RoomState {
   round: number;
 }
 
+/**
+ * The per-frame update: only the numbers that move, as a positional array.
+ * [userId, progress, wpm, accuracy, errors, correctChars, boostUntil, finishedAt, position]
+ */
+export type RacerTick = [
+  string,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number | null,
+  number | null,
+  number | null,
+];
+
+export interface RoomTick {
+  t: number;
+  r: RacerTick[];
+}
+
 export interface FinalStanding {
   userId: string;
   displayName: string;
