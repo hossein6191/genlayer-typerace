@@ -25,8 +25,15 @@ app.use(
   cors({
     origin(origin, callback) {
       // Same-origin requests arrive without an Origin header.
-      if (!origin || env.CORS_ORIGINS.includes(origin)) callback(null, true);
-      else callback(new Error(`origin ${origin} is not allowed`));
+      if (!origin || env.CORS_ORIGINS.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      // An origin we do not publish to is not an error. Answer without the
+      // CORS headers and let the browser decide. Throwing here would turn
+      // every such request into a 500, including ordinary asset loads.
+      console.warn(`[cors] refused origin ${origin}`);
+      callback(null, false);
     },
     credentials: true,
   }),

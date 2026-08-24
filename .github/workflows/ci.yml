@@ -82,6 +82,29 @@ jobs:
           curl -sf http://localhost:8787/ | grep -q "GenLayer TypeRace" \
             && echo "the container serves the built client"
 
+      - name: Fetch the app the way a browser does
+        run: |
+          # Vite ships the client as a module script, and a module script is
+          # fetched with CORS semantics even same-origin, so the browser sends
+          # an Origin header. If the server refuses its own origin the script
+          # 500s and the page renders blank while /api/health still looks fine.
+          ORIGIN=http://localhost:8787
+
+          BUNDLE=$(curl -sf $ORIGIN/ | grep -o '/assets/index-[^"]*\.js' | head -1)
+          echo "entry bundle: $BUNDLE"
+          test -n "$BUNDLE"
+
+          CODE=$(curl -s -o /tmp/bundle.js -w '%{http_code}' -H "Origin: $ORIGIN" "$ORIGIN$BUNDLE")
+          echo "bundle status with an Origin header: $CODE"
+          test "$CODE" = "200"
+          test -s /tmp/bundle.js
+
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: $ORIGIN" $ORIGIN/api/meta)
+          echo "api status with an Origin header: $CODE"
+          test "$CODE" = "200"
+
+          echo "the browser can load the app"
+
       - name: Check the database was written to the volume
         run: |
           sudo ls -la /tmp/typerace-data

@@ -42,6 +42,36 @@ const PUBLIC_URL = (process.env.PUBLIC_URL ?? `http://localhost:${isProd ? PORT 
   "",
 );
 
+/**
+ * Origins allowed to call the API.
+ *
+ * The server serves its own client, so its public origin must always be in
+ * here: a module script is fetched with CORS semantics even same-origin, so
+ * leaving the deployed origin out makes the browser refuse the app's own
+ * JavaScript and the page renders blank.
+ */
+function allowedOrigins(): string[] {
+  const origins = new Set(
+    (process.env.CORS_ORIGINS ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+
+  try {
+    origins.add(new URL(PUBLIC_URL).origin);
+  } catch {
+    // PUBLIC_URL is not a URL; the same-origin case still works without it.
+  }
+
+  if (!isProd) {
+    origins.add("http://localhost:5173");
+    origins.add("http://127.0.0.1:5173");
+  }
+
+  return [...origins];
+}
+
 export const env = {
   NODE_ENV,
   isProd,
@@ -56,11 +86,7 @@ export const env = {
     process.env.DATABASE_FILE ?? "./data/genlayer-typerace.db",
   ),
 
-  /** Allow the Vite dev server origin to talk to the API during development. */
-  CORS_ORIGINS: (process.env.CORS_ORIGINS ?? "http://localhost:5173,http://127.0.0.1:5173")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
+  CORS_ORIGINS: allowedOrigins(),
 
   TRUST_PROXY: bool(process.env.TRUST_PROXY, isProd),
 } as const;
