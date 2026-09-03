@@ -67,24 +67,24 @@
   --radius-xl: 1.5rem;
 
   /* ---- Animations ---- */
-  --animate-drift: drift 22s linear infinite;
+  /* Each wave layer slides exactly one stripe period and loops, so the seam
+     is invisible and the distance stays small enough to fit in the bleed.
+     Speeds match the old 1200px/22s and -900px/22s. */
+  --animate-drift-a: drift-a 1.45s linear infinite;
+  --animate-drift-b: drift-b 2.58s linear infinite;
   --animate-pulse-glow: pulse-glow 2.4s ease-in-out infinite;
   --animate-shimmer: shimmer 2.6s linear infinite;
   --animate-rise: rise 0.5s var(--ease-out-quint) both;
   --animate-caret: caret 1.05s steps(1) infinite;
 }
 
-@keyframes drift {
-  from {
-    background-position:
-      0 0,
-      0 0;
-  }
-  to {
-    background-position:
-      1200px 0,
-      -900px 0;
-  }
+@keyframes drift-a {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(79.2px, 0, 0); }
+}
+@keyframes drift-b {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-105.6px, 0, 0); }
 }
 @keyframes pulse-glow {
   0%,
@@ -174,28 +174,47 @@
       );
   }
 
-  body::after {
-    content: "";
+  /* The data waves. This used to be body::after with both gradients in one
+     background and `background-position` animating — which repaints the full
+     viewport every frame, and every backdrop-filter above it re-blurs on every
+     frame too. Now: a fixed, masked container that never changes, and two
+     children that only ever move by transform, which the compositor does from
+     a cached bitmap. Nothing is repainted while the page sits still. */
+  .gl-ambient {
     position: fixed;
-    inset: -10%;
+    inset: 0;
     z-index: -1;
+    overflow: hidden;
     pointer-events: none;
     opacity: 0.4;
-    background-image:
-      repeating-linear-gradient(
-        100deg,
-        transparent 0 38px,
-        color-mix(in oklab, var(--color-gl-purple) 9%, transparent) 38px 39px,
-        transparent 39px 78px
-      ),
-      repeating-linear-gradient(
-        80deg,
-        transparent 0 52px,
-        color-mix(in oklab, var(--color-gl-blue) 7%, transparent) 52px 53px,
-        transparent 53px 104px
-      );
     mask-image: radial-gradient(90% 70% at 50% 30%, #000 20%, transparent 78%);
-    animation: var(--animate-drift);
+  }
+  .gl-ambient > i {
+    position: absolute;
+    /* 10% bleed plus the one-period slide each layer travels. */
+    inset: -10%;
+    inset-inline: calc(-10% - 110px);
+    display: block;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+  .gl-ambient > i:first-child {
+    background-image: repeating-linear-gradient(
+      100deg,
+      transparent 0 38px,
+      color-mix(in oklab, var(--color-gl-purple) 9%, transparent) 38px 39px,
+      transparent 39px 78px
+    );
+    animation: var(--animate-drift-a);
+  }
+  .gl-ambient > i:last-child {
+    background-image: repeating-linear-gradient(
+      80deg,
+      transparent 0 52px,
+      color-mix(in oklab, var(--color-gl-blue) 7%, transparent) 52px 53px,
+      transparent 53px 104px
+    );
+    animation: var(--animate-drift-b);
   }
 
   :focus-visible {
@@ -247,7 +266,11 @@
         color-mix(in oklab, var(--color-surface) 92%, transparent)
       );
     border: 1px solid var(--color-border);
-    backdrop-filter: blur(14px);
+    /* The panel is 92% opaque, so the blur behind it is barely there to the
+       eye — but its cost is not: blur work grows with the square of the
+       radius, and it reruns every frame the waves move. 6px keeps the frosted
+       edge at a fifth of the price. */
+    backdrop-filter: blur(6px);
   }
 
   .gl-panel-glow {

@@ -150,6 +150,8 @@ export default function Home() {
   useEffect(() => {
     if (reduceMotion) return;
     const id = window.setInterval(() => {
+      // Nothing to show in a background tab, so nothing to render.
+      if (document.hidden) return;
       setDemo((prev) =>
         prev.map((racer) => {
           const step = (racer.wpm / 12_000) * 3;

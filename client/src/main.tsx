@@ -5,8 +5,10 @@ import App from "./App";
 import { AuthProvider } from "./hooks/useAuth";
 import { ErrorBoundary } from "./components/layout/ErrorBoundary";
 import { installGlobalErrorReporting } from "./lib/report-error";
+import { installStaleBuildRecovery } from "./lib/stale-build";
 import "./styles/globals.css";
 
+installStaleBuildRecovery();
 installGlobalErrorReporting();
 
 createRoot(document.getElementById("root")!).render(

@@ -21,3 +21,7 @@ client/src/**/*.jsx
 client/src/**/*.d.ts
 !client/src/vite-env.d.ts
 server/src/**/*.js
+# vite.config.ts is the source; a compiled .js twin beside it is what Vite loads first
+client/vite.config.js
+# tsc -b bookkeeping, regenerated on every build
+client/*.tsbuildinfo

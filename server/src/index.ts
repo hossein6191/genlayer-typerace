@@ -68,6 +68,15 @@ if (fs.existsSync(clientDist)) {
     }),
   );
 
+  // A hashed chunk that no longer exists — a tab still open across a deploy
+  // asks for /assets/Play-<old hash>.js — must fail as a 404, not fall through
+  // to index.html. Handing a module <script> an HTML document is what produces
+  // "Failed to fetch dynamically imported module", and it hides the real cause.
+  app.get(/^\/assets\//, (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache");
+    res.status(404).type("text/plain").send("asset not found");
+  });
+
   app.get(/^(?!\/api\/).*/, (_req, res) => {
     res.setHeader("Cache-Control", "no-cache");
     res.sendFile(path.join(clientDist, "index.html"));

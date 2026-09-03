@@ -284,6 +284,43 @@ export function keyIdForChar(char: string): { id: string; shift: boolean } | nul
   return CHAR_TO_KEY[char] ?? null;
 }
 
+/**
+ * Rotates a hex colour's hue by a few degrees and returns hex.
+ *
+ * The per-key tint used to be `filter: hue-rotate(…)` on two spans of every
+ * key. A CSS filter forces its element to rasterise on its own surface, so
+ * that was two extra surfaces per key, for a shift of at most 1.5°. Baking the
+ * shift into the colours themselves is the same tint at no cost.
+ */
+function shiftHue(hex: string, degrees: number): string {
+  if (!degrees) return hex;
+  const n = parseInt(hex.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255;
+  const g = ((n >> 8) & 255) / 255;
+  const b = (n & 255) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (d === 0) return hex;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h =
+    max === r ? ((g - b) / d + (g < b ? 6 : 0)) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (((h * 60 + degrees) % 360) + 360) % 360 / 360;
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const channel = (t: number) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  const to = (v: number) => Math.round(v * 255).toString(16).padStart(2, "0");
+  return `#${to(channel(h + 1 / 3))}${to(channel(h))}${to(channel(h - 1 / 3))}`;
+}
+
 function shiftLightness(hex: string, amount: number): string {
   const n = parseInt(hex.slice(1), 16);
   const r = (n >> 16) & 255;
@@ -1001,7 +1038,6 @@ const MOBILE_LABEL_OVERRIDES: Record<string, string> = {
 const KEY_STYLE_TAG = `
 .kb-key {
   --tilt: 0deg;
-  will-change: transform;
   contain: layout style paint;
   backface-visibility: hidden;
   touch-action: none;
@@ -1009,7 +1045,11 @@ const KEY_STYLE_TAG = `
   transform: translateY(0) scale(1) rotate(var(--tilt));
   transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+/* A layer is promoted for the press only. will-change on every key at rest
+   kept sixty-odd bitmaps of seven-layer keycaps alive in GPU memory the whole
+   time the board was on screen; that was the RAM. */
 .kb-key[data-pressed="true"] {
+  will-change: transform;
   transform: translateY(4.5px) scale(0.975) rotate(calc(var(--tilt) * 0.3));
   transition: transform 15ms linear;
 }
@@ -1129,7 +1169,10 @@ const Key = memo(function Key({
 
   const layers = useMemo(() => {
     const insetTRBL = `${sculpt.insetTop}px ${sculpt.insetSide}px ${sculpt.insetBottom}px ${sculpt.insetSide}px`;
-    const [w0, w1, w2, w3, w4] = theme.wall;
+    const [w0, w1, w2, w3, w4] = theme.wall.map((c) => shiftHue(c, variance.hueShift)) as [
+      string, string, string, string, string,
+    ];
+    const keycap = shiftHue(theme.keycap, variance.hueShift * 0.4);
     return {
       insetTRBL,
 
@@ -1143,7 +1186,6 @@ const Key = memo(function Key({
         w4,
         variance.lightnessShift * 0.5,
       )} 100%)`,
-      wallFilter: `hue-rotate(${variance.hueShift}deg)`,
       wallNoisePosition: `${variance.specularShiftX}px ${variance.specularShiftY}px`,
 
       wallShadow: theme.wallShadow,
@@ -1152,8 +1194,7 @@ const Key = memo(function Key({
         0.4 - variance.wearAmount * 0.06
       }), rgba(255,255,255,0) 44%), radial-gradient(150% 120% at 50% 118%, rgba(15,9,4,${
         0.07 + variance.wearAmount * 0.02
-      }), transparent 60%), ${shiftLightness(theme.keycap, variance.lightnessShift * 0.6)}`,
-      topFilter: `hue-rotate(${variance.hueShift * 0.4}deg)`,
+      }), transparent 60%), ${shiftLightness(keycap, variance.lightnessShift * 0.6)}`,
       topNoisePosition: `${variance.specularShiftY}px ${variance.specularShiftX}px`,
       topShadow: theme.topRingShadow,
       topShadowPressed: theme.topRingShadowPressed,
@@ -1227,7 +1268,6 @@ const Key = memo(function Key({
         style={{
           borderRadius: radius.wall,
           background: layers.wallGradient,
-          filter: layers.wallFilter,
           boxShadow: layers.wallShadow,
           zIndex: 1,
         }}
@@ -1250,7 +1290,6 @@ const Key = memo(function Key({
           borderRadius: radius.top,
           inset: layers.insetTRBL,
           background: layers.topGradient,
-          filter: layers.topFilter,
           boxShadow: pressed ? layers.topShadowPressed : layers.topShadow,
           transition: "box-shadow 140ms ease-out, background 140ms ease-out",
           zIndex: 3,

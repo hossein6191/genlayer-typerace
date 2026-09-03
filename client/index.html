@@ -18,6 +18,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
+    <!-- The brand "data waves" behind everything. Two layers, each moved by a
+         transform the GPU composites from a cached bitmap, in place of the old
+         background-position animation that repainted the whole viewport every
+         frame. Same picture; the fans stop. -->
+    <div class="gl-ambient" aria-hidden="true"><i></i><i></i></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
